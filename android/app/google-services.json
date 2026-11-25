@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "67231671620",
+    "firebase_url": "https://growsense-83ff2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "growsense-83ff2",
+    "storage_bucket": "growsense-83ff2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67231671620:android:3791266f42eddb9345e311",
+        "android_client_info": {
+          "package_name": "com.ramscp.growsense_1_0"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "67231671620-s5solu58q4i03pnammn9kniuc9shucno.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ramscp.growsense_1_0",
+            "certificate_hash": "733116197dfc6ec44eb1d31f5c38a47e99bfb236"
+          }
+        },
+        {
+          "client_id": "67231671620-h6g5hm7igaprucinc2t8cqetoae18m9m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIGBapWOZ21OewXtrjz1RmxWB1SzCQICU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "67231671620-h6g5hm7igaprucinc2t8cqetoae18m9m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "67231671620-to37sjntp0bv0onm9d8o8ebtjq4judre.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ramscp.growsense10"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
