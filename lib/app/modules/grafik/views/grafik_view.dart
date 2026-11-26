@@ -36,15 +36,10 @@ class GrafikView extends GetView<GrafikController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. SELECTOR PERIODE TREN
                 _buildRangeSelector(),
                 const SizedBox(height: 12),
-
-                // 2. DATE PICKER DINAMIS
                 _buildDatePicker(context),
                 const SizedBox(height: 12),
-
-                // 4. GRAFIK DENGAN DYNAMIC SCALING & CARDS
                 _buildCombinedChart(),
                 const SizedBox(height: 24),
               ],
@@ -227,8 +222,10 @@ class GrafikView extends GetView<GrafikController> {
               allActiveValues.addAll(controller.lembapSpots.where((v) => v > 0));
             }
             if (showNutrisi) {
-              activeLineBars.add(_buildRawLineBarData(controller.nutrisiSpots, colorNutrisi, maxPoints));
-              allActiveValues.addAll(controller.nutrisiSpots.where((v) => v > 0));
+              // Skala 10^2 (dibagi 100) agar proporsional dengan parameter lain di grafik
+              List<double> scaledNutrisi = controller.nutrisiSpots.map((v) => v / 100.0).toList();
+              activeLineBars.add(_buildRawLineBarData(scaledNutrisi, colorNutrisi, maxPoints));
+              allActiveValues.addAll(scaledNutrisi.where((v) => v > 0));
             }
             if (showPh) {
               activeLineBars.add(_buildRawLineBarData(controller.phSpots, colorPh, maxPoints));
@@ -319,18 +316,15 @@ class GrafikView extends GetView<GrafikController> {
                                 ),
                               ),
                             ),
-                            // 🔥 PENYESUAIAN AREA SENTUH & TOUCH THRESHOLD
                             lineTouchData: LineTouchData(
                               enabled: true,
                               handleBuiltInTouches: false,
-                              touchSpotThreshold: 20, // 👈 Memperluas radius toleransi sentuhan jari hingga 20px
+                              touchSpotThreshold: 20,
                               touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
                                 if (event is FlTapUpEvent &&
                                     touchResponse != null &&
                                     touchResponse.lineBarSpots != null &&
                                     touchResponse.lineBarSpots!.isNotEmpty) {
-                                  
-                                  // Mengambil titik X dan membulatkannya ke index tanggal/jam terdekat
                                   final touchedSpot = touchResponse.lineBarSpots!.first;
                                   double selectedPoint = touchedSpot.x.roundToDouble();
 
@@ -348,7 +342,7 @@ class GrafikView extends GetView<GrafikController> {
                         ),
                 ),
 
-                // CARD HITAM RINCIAN PERSENSOR ON-TAP
+                // CARD HITAM RINCIAN PERSENSOR ON-TAP (MENAMPILKAN NILAI ASLI)
                 Obx(() {
                   double? selectedPoint = controller.selectedHour.value;
                   if (selectedPoint == null) return const SizedBox.shrink();
@@ -391,7 +385,12 @@ class GrafikView extends GetView<GrafikController> {
 
                         if (showSuhu) _buildDetailRow("Suhu", "${vSuhu.toStringAsFixed(1)} °C", colorSuhu),
                         if (showLembap) _buildDetailRow("Kelembapan", "${vLembap.toStringAsFixed(1)} %", colorLembap),
-                        if (showNutrisi) _buildDetailRow("Nutrisi", "${vNutrisi.toStringAsFixed(1)} PPM", colorNutrisi),
+                        if (showNutrisi)
+                          _buildDetailRow(
+                            "Nutrisi",
+                            "${vNutrisi.toStringAsFixed(1)} PPM (${(vNutrisi / 100).toStringAsFixed(2)} ×10²)",
+                            colorNutrisi,
+                          ),
                         if (showPh) _buildDetailRow("pH Air", vPh.toStringAsFixed(1), colorPh),
                       ],
                     ),
@@ -419,7 +418,6 @@ class GrafikView extends GetView<GrafikController> {
     );
   }
 
-  // 🔥 TITIK LEBIH MUDAH TERDAPAT VISUAL HIGHLIGHT JIKA DITEKAN
   LineChartBarData _buildRawLineBarData(List<double> listData, Color color, int maxPoints) {
     List<FlSpot> spots = [];
     for (int p = 1; p <= maxPoints; p++) {
@@ -430,6 +428,7 @@ class GrafikView extends GetView<GrafikController> {
     return LineChartBarData(
       spots: spots,
       isCurved: true,
+      preventCurveOverShooting: true,
       color: color,
       barWidth: 2.5,
       dotData: FlDotData(
@@ -438,7 +437,7 @@ class GrafikView extends GetView<GrafikController> {
           bool isSelected = controller.selectedHour.value == spot.x;
 
           return FlDotCirclePainter(
-            radius: isSelected ? 6.0 : 3.5, // 👈 Membesar jika dipilih
+            radius: isSelected ? 6.0 : 3.5,
             color: isSelected ? Colors.yellowAccent : color,
             strokeWidth: isSelected ? 2.5 : 1.0,
             strokeColor: isSelected ? Colors.black : Colors.white,
@@ -456,7 +455,7 @@ class GrafikView extends GetView<GrafikController> {
         children: [
           _buildInteractiveChipItem("Suhu (°C)", 'Suhu', colorSuhu),
           _buildInteractiveChipItem("Kelembapan (%)", 'Kelembapan', colorLembap),
-          _buildInteractiveChipItem("Nutrisi (PPM)", 'Nutrisi', colorNutrisi),
+          _buildInteractiveChipItem("Nutrisi (×10² PPM)", 'Nutrisi', colorNutrisi),
           _buildInteractiveChipItem("pH Air", 'pH Air', colorPh),
         ],
       );
