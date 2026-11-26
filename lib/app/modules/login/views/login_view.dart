@@ -18,19 +18,16 @@ class LoginView extends GetView<LoginController> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo GrowSense 
                 Transform.scale(
-                  scale: 2.2, // Menaikkan skala ukuran logo (sesuaikan angka ini jika kurang besar/terlalu besar)
+                  scale: 2.2,
                   child: Image.asset(
-                    'assets/images/logo1.png', // Atau nama file logo Anda
+                    'assets/images/logo1.png',
                     height: 100,
                     fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(height: 16),
                 
-                
-                // Judul
                 const Text(
                   'GrowSense',
                   textAlign: TextAlign.center,
@@ -41,7 +38,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
                 const Text(
-                  'Sistem Monitoring',
+                  'Monitoring System',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -50,13 +47,12 @@ class LoginView extends GetView<LoginController> {
                 ),
                 const SizedBox(height: 40),
 
-                // Field Input Email
                 TextField(
                   controller: controller.emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'masukkan email kamu',
+                    hintText: 'Enter your email',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -65,13 +61,12 @@ class LoginView extends GetView<LoginController> {
                 ),
                 const SizedBox(height: 16),
 
-                // Field Input Password
                 Obx(() => TextField(
                       controller: controller.passwordController,
                       obscureText: controller.isObscure.value,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'masukkan password',
+                        hintText: 'Enter your password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -88,7 +83,6 @@ class LoginView extends GetView<LoginController> {
                     )),
                 const SizedBox(height: 24),
 
-                // Tombol Login / Loading Indicator
                 Obx(() => SizedBox(
                       height: 50,
                       child: ElevatedButton(
@@ -112,7 +106,7 @@ class LoginView extends GetView<LoginController> {
                                 ),
                               )
                             : const Text(
-                                'MASUK',
+                                'LOGIN',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -122,18 +116,16 @@ class LoginView extends GetView<LoginController> {
                     )),
                 const SizedBox(height: 16),
 
-                // Navigasi ke Halaman Register
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Belum punya akun? "),
+                    const Text("Don't have an account? "),
                     GestureDetector(
                       onTap: () {
-                        // Pindah ke rute Register (jika modul register sudah siap)
                         Get.toNamed(Routes.REGISTER);
                       },
                       child: const Text(
-                        'Daftar Sekarang',
+                        'Register Now',
                         style: TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,

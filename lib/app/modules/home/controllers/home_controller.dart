@@ -50,13 +50,11 @@ class HomeController extends GetxController {
   var phStatus = "Normal".obs;
   var phStatusColor = Colors.green.obs;
 
-  // 🔴 REAKTIF UNTUK FASE NUTRISI AKTIF 🔴
   var faseAktif = 'semai'.obs;
-  var namaFaseAktif = 'Semai'.obs;
+  var namaFaseAktif = 'Seedling'.obs;
   var nutrisiMinAktif = 400.0.obs;
   var nutrisiMaxAktif = 600.0.obs;
 
-  // 🔴 REAKTIF UNTUK BATAS PPM MASING-MASING FASE (DROPDOWN DINAMIS) 🔴
   var semaiMin = 400.obs;
   var semaiMax = 600.obs;
   var vegAwalMin = 600.obs;
@@ -64,7 +62,6 @@ class HomeController extends GetxController {
   var vegLanjutanMin = 750.obs;
   var vegLanjutanMax = 1000.obs;
 
-  // 🔴 REAKTIF UNTUK BATAS AMBANG SENSOR UMUM (SUHU, LEMBAP, PH) 🔴
   var suhuMin = 16.0.obs;
   var suhuMax = 28.0.obs;
   var lembapMin = 60.0.obs;
@@ -74,7 +71,6 @@ class HomeController extends GetxController {
 
   var chatLogs = <ChatLogItem>[].obs;
 
-  // Penanda untuk mencegah spaming pencatatan log anomali yang sama
   String _lastNotifiedSignature = "";
 
   @override
@@ -91,14 +87,12 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  // 🔴 MENDENGARKAN NODE PENGATURAN & FASE DARI FIREBASE 🔴
   void _listenPengaturanFirebase() {
     _pengaturanSubscription?.cancel();
     _pengaturanSubscription = _dbRef.child('pengaturan').onValue.listen((event) {
       if (event.snapshot.value != null) {
         Map<dynamic, dynamic> data = event.snapshot.value as Map<dynamic, dynamic>;
 
-        // 1. Ambil batas umum (Suhu, Lembap, pH) dari Firebase
         if (data['suhuMin'] != null) suhuMin.value = double.parse(data['suhuMin'].toString());
         if (data['suhuMax'] != null) suhuMax.value = double.parse(data['suhuMax'].toString());
         if (data['lembapMin'] != null) lembapMin.value = double.parse(data['lembapMin'].toString());
@@ -106,7 +100,6 @@ class HomeController extends GetxController {
         if (data['phMin'] != null) phMin.value = double.parse(data['phMin'].toString());
         if (data['phMax'] != null) phMax.value = double.parse(data['phMax'].toString());
 
-        // 2. Ambil batas per fase untuk memperbarui teks Dropdown secara dinamis
         if (data['fase'] != null) {
           var fData = data['fase'];
           if (fData['semai'] != null) {
@@ -123,11 +116,9 @@ class HomeController extends GetxController {
           }
         }
 
-        // 3. Ambil nama key fase yang aktif (default: semai)
         String fase = data['faseAktif'] ?? 'semai';
         faseAktif.value = fase;
 
-        // 4. Ambil detail batas nutrisi sesuai fase aktif
         if (data['fase'] != null && data['fase'][fase] != null) {
           var detailFase = data['fase'][fase];
 
@@ -135,17 +126,16 @@ class HomeController extends GetxController {
           nutrisiMaxAktif.value = double.parse((detailFase['nutrisiMax'] ?? 600).toString());
 
           if (fase == 'semai') {
-            namaFaseAktif.value = 'Semai';
+            namaFaseAktif.value = 'Seedling';
           } else if (fase == 'veg_awal') {
-            namaFaseAktif.value = 'Vegetatif Awal';
+            namaFaseAktif.value = 'Early Vegetative';
           } else if (fase == 'veg_lanjutan') {
-            namaFaseAktif.value = 'Vegetatif Lanjutan';
+            namaFaseAktif.value = 'Late Vegetative';
           } else {
             namaFaseAktif.value = detailFase['nama'] ?? fase;
           }
         }
 
-        // Evaluasi ulang seluruh status sensor terkini saat ambang batas diperbarui
         double cSuhu = double.tryParse(suhuValue.value) ?? 0.0;
         double cLembap = double.tryParse(lembapValue.value) ?? 0.0;
         double cPh = double.tryParse(phValue.value) ?? 0.0;
@@ -157,27 +147,33 @@ class HomeController extends GetxController {
         _evaluasiStatusNutrisi(cNutrisi);
       }
     }, onError: (error) {
-      debugPrint("🚨 Error Realtime Pengaturan: $error");
+      debugPrint("🚨 Realtime Settings Error: $error");
     });
   }
 
-  // 🔴 FUNGSI MENGUBAH FASE NUTRISI DARI APP 🔴
   Future<void> gantiFase(String faseBaru) async {
+    String labelFase = switch (faseBaru) {
+      'semai' => 'SEEDLING',
+      'veg_awal' => 'EARLY VEGETATIVE',
+      'veg_lanjutan' => 'LATE VEGETATIVE',
+      _ => faseBaru.replaceAll('_', ' ').toUpperCase(),
+    };
+
     try {
       await _dbRef.child('pengaturan').update({
         'faseAktif': faseBaru,
       });
       Get.snackbar(
-        'Berhasil',
-        'Fase nutrisi berhasil diubah ke ${faseBaru.replaceAll('_', ' ').toUpperCase()}!',
+        'Success',
+        'Nutrient phase updated to $labelFase!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
     } catch (e) {
       Get.snackbar(
-        'Gagal',
-        'Gagal mengubah fase: $e',
+        'Failed',
+        'Failed to change phase: $e',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
@@ -185,7 +181,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // 🔴 UPDATE BATAS UMUM (TANPA SNACKBAR BIKIN CONFLICT) 🔴
   Future<void> updateBatasUmum({
     required double sMin,
     required double sMax,
@@ -204,11 +199,10 @@ class HomeController extends GetxController {
         'phMax': pMax,
       });
     } catch (e) {
-      debugPrint("Gagal update batas umum: $e");
+      debugPrint("Failed to update general thresholds: $e");
     }
   }
 
-  // 🔴 UPDATE NUTRISI FASE (TANPA SNACKBAR BIKIN CONFLICT) 🔴
   Future<void> updateBatasNutrisiFase({
     required String targetFase,
     required int nMin,
@@ -220,7 +214,6 @@ class HomeController extends GetxController {
         'nutrisiMax': nMax,
       });
 
-      // Update nilai reaktif lokal langsung
       if (targetFase == 'semai') {
         semaiMin.value = nMin;
         semaiMax.value = nMax;
@@ -232,7 +225,7 @@ class HomeController extends GetxController {
         vegLanjutanMax.value = nMax;
       }
     } catch (e) {
-      debugPrint("Gagal update fase $targetFase: $e");
+      debugPrint("Failed to update phase $targetFase: $e");
     }
   }
 
@@ -263,7 +256,7 @@ class HomeController extends GetxController {
         _evaluasiNotifikasiAnomali(sensor.waktuLokal);
       },
       onError: (error) {
-        debugPrint("🚨 Error Realtime Sensor: $error");
+        debugPrint("🚨 Realtime Sensor Error: $error");
       },
     );
   }
@@ -277,7 +270,7 @@ class HomeController extends GetxController {
     }
 
     ChatLogItem pesanBaru = ChatLogItem(
-      judul: info["judul"] ?? "Status Sistem",
+      judul: info["judul"] ?? "System Status",
       deskripsi: info["deskripsi"] ?? "",
       status: info["status"] ?? "NORMAL",
       color: info["color"] ?? "green",
@@ -291,7 +284,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // 🔥 FUNGSI EVALUASI ANOMALI & CATAT LOG KE FIREBASE
   void _evaluasiNotifikasiAnomali(String waktuData) {
     final info = kesimpulanKondisi;
     String color = info["color"] ?? "green";
@@ -302,8 +294,8 @@ class HomeController extends GetxController {
       if (_lastNotifiedSignature != currentSignature) {
         _lastNotifiedSignature = currentSignature;
 
-        String judul = info["judul"] ?? "Peringatan Anomali";
-        String pesan = info["deskripsi"] ?? "Parameter tanaman melebihi batas normal.";
+        String judul = info["judul"] ?? "Anomaly Alert";
+        String pesan = info["deskripsi"] ?? "Plant parameters exceed normal thresholds.";
 
         _simpanKeFirebaseLogNotifikasi(judul, pesan, waktuData);
       }
@@ -324,9 +316,9 @@ class HomeController extends GetxController {
         'fase': namaFaseAktif.value,
         'waktuMs': nowMs,
       });
-      debugPrint("✅ Sukses mencatat anomali ke log_notifikasi Firebase!");
+      debugPrint("✅ Anomaly successfully recorded to Firebase log_notifikasi!");
     } catch (e) {
-      debugPrint("❌ Gagal mencatat log_notifikasi: $e");
+      debugPrint("❌ Failed to record log_notifikasi: $e");
     }
   }
 
@@ -335,8 +327,8 @@ class HomeController extends GetxController {
       if (!isSilent) {
         isUploadingToDrive.value = true;
         Get.snackbar(
-          "Menghubungkan",
-          "Mengunggah file log_growsense_v2.csv ke Google Drive...",
+          "Connecting",
+          "Uploading log_growsense_v2.csv to Google Drive...",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.blue.shade700,
           colorText: Colors.white,
@@ -349,8 +341,8 @@ class HomeController extends GetxController {
 
       if (!isSilent) {
         Get.snackbar(
-          "Berhasil",
-          "Seluruh data riwayat CSV berhasil disinkronkan ke Google Drive!",
+          "Success",
+          "All CSV history data has been synced to Google Drive!",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.shade700,
           colorText: Colors.white,
@@ -359,8 +351,8 @@ class HomeController extends GetxController {
     } catch (e) {
       if (!isSilent) {
         Get.snackbar(
-          "Gagal Sinkronisasi",
-          "Terjadi kesalahan saat unggah: $e",
+          "Sync Failed",
+          "An error occurred during upload: $e",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
@@ -373,13 +365,13 @@ class HomeController extends GetxController {
 
   void _evaluasiStatusSuhu(double val) {
     if (val == -99 || val < -50) {
-      suhuStatus.value = "OFF / RUSAK";
+      suhuStatus.value = "OFF / FAULT";
       suhuStatusColor.value = Colors.grey;
     } else if (val < suhuMin.value) {
-      suhuStatus.value = "Dingin";
+      suhuStatus.value = "Cold";
       suhuStatusColor.value = Colors.red;
     } else if (val > suhuMax.value) {
-      suhuStatus.value = "Panas";
+      suhuStatus.value = "Hot";
       suhuStatusColor.value = Colors.red;
     } else {
       suhuStatus.value = "Normal";
@@ -389,13 +381,13 @@ class HomeController extends GetxController {
 
   void _evaluasiStatusLembap(double val) {
     if (val == -99 || val < 0) {
-      lembapStatus.value = "OFF / RUSAK";
+      lembapStatus.value = "OFF / FAULT";
       lembapStatusColor.value = Colors.grey;
     } else if (val < lembapMin.value) {
-      lembapStatus.value = "Kering";
+      lembapStatus.value = "Dry";
       lembapStatusColor.value = Colors.red;
     } else if (val > lembapMax.value) {
-      lembapStatus.value = "Lembap";
+      lembapStatus.value = "Humid";
       lembapStatusColor.value = Colors.red;
     } else {
       lembapStatus.value = "Normal";
@@ -405,13 +397,13 @@ class HomeController extends GetxController {
 
   void _evaluasiStatusPh(double val) {
     if (val == -99 || val < 0) {
-      phStatus.value = "OFF / RUSAK";
+      phStatus.value = "OFF / FAULT";
       phStatusColor.value = Colors.grey;
     } else if (val < phMin.value) {
-      phStatus.value = "Asam";
+      phStatus.value = "Acidic";
       phStatusColor.value = Colors.red;
     } else if (val > phMax.value) {
-      phStatus.value = "Basa";
+      phStatus.value = "Alkaline";
       phStatusColor.value = Colors.red;
     } else {
       phStatus.value = "Normal";
@@ -421,13 +413,13 @@ class HomeController extends GetxController {
 
   void _evaluasiStatusNutrisi(int val) {
     if (val == -99 || val < 0) {
-      nutrisiStatus.value = "OFF / RUSAK";
+      nutrisiStatus.value = "OFF / FAULT";
       nutrisiStatusColor.value = Colors.grey;
     } else if (val < nutrisiMinAktif.value) {
-      nutrisiStatus.value = "Rendah";
+      nutrisiStatus.value = "Low";
       nutrisiStatusColor.value = Colors.red;
     } else if (val > nutrisiMaxAktif.value) {
-      nutrisiStatus.value = "Tinggi";
+      nutrisiStatus.value = "High";
       nutrisiStatusColor.value = Colors.red;
     } else {
       nutrisiStatus.value = "Normal";
@@ -439,31 +431,31 @@ class HomeController extends GetxController {
     double val = double.tryParse(suhuValue.value) ?? 0;
     if (val == -99 || val < -50) {
       return {
-        "status": "OFF / RUSAK",
+        "status": "OFF / FAULT",
         "color": Colors.grey,
-        "dampak": "Sensor suhu tidak terhubung.",
-        "penanganan": "Periksa kabel atau sensor suhu."
+        "dampak": "Temperature sensor disconnected.",
+        "penanganan": "Check wiring or temperature sensor."
       };
     } else if (val < suhuMin.value) {
       return {
-        "status": "DINGIN",
+        "status": "COLD",
         "color": Colors.red,
-        "dampak": "Suhu di bawah target (< ${suhuMin.value}°C). Tumbuh lambat.",
-        "penanganan": "Gunakan heater / atur suhu ruangan."
+        "dampak": "Temp below target (< ${suhuMin.value}°C). Slow growth.",
+        "penanganan": "Turn on heater / adjust room temperature."
       };
     } else if (val > suhuMax.value) {
       return {
-        "status": "PANAS",
+        "status": "HOT",
         "color": Colors.red,
-        "dampak": "Suhu di atas target (> ${suhuMax.value}°C). Stres panas.",
-        "penanganan": "Nyalakan kipas."
+        "dampak": "Temp above target (> ${suhuMax.value}°C). Heat stress.",
+        "penanganan": "Turn on cooling fan."
       };
     } else {
       return {
         "status": "NORMAL",
         "color": Colors.green,
-        "dampak": "Pertumbuhan optimal & sehat (${suhuMin.value} - ${suhuMax.value}°C).",
-        "penanganan": "Pertahankan kondisi saat ini."
+        "dampak": "Optimal & healthy growth (${suhuMin.value} - ${suhuMax.value}°C).",
+        "penanganan": "Maintain current condition."
       };
     }
   }
@@ -472,31 +464,31 @@ class HomeController extends GetxController {
     double val = double.tryParse(lembapValue.value) ?? 0;
     if (val == -99 || val < 0) {
       return {
-        "status": "OFF / RUSAK",
+        "status": "OFF / FAULT",
         "color": Colors.grey,
-        "dampak": "Sensor kelembapan terganggu.",
-        "penanganan": "Periksa koneksi sensor kelembapan."
+        "dampak": "Humidity sensor disrupted.",
+        "penanganan": "Check humidity sensor connection."
       };
     } else if (val < lembapMin.value) {
       return {
-        "status": "KERING",
+        "status": "DRY",
         "color": Colors.red,
-        "dampak": "Kelembapan di bawah target (< ${lembapMin.value}%). Daun mengering.",
-        "penanganan": "Nyalakan humidifier."
+        "dampak": "Humidity below target (< ${lembapMin.value}%). Leaves drying.",
+        "penanganan": "Turn on humidifier."
       };
     } else if (val > lembapMax.value) {
       return {
-        "status": "LEMBAP",
+        "status": "HUMID",
         "color": Colors.red,
-        "dampak": "Kelembapan di atas target (> ${lembapMax.value}%). Rentan jamur.",
-        "penanganan": "Nyalakan exhaust fan / ventilasi."
+        "dampak": "Humidity above target (> ${lembapMax.value}%). Prone to fungus.",
+        "penanganan": "Turn on exhaust fan / ventilation."
       };
     } else {
       return {
         "status": "NORMAL",
         "color": Colors.green,
-        "dampak": "Transpirasi seimbang (${lembapMin.value} - ${lembapMax.value}%).",
-        "penanganan": "Pertahankan kondisi."
+        "dampak": "Balanced transpiration (${lembapMin.value} - ${lembapMax.value}%).",
+        "penanganan": "Maintain condition."
       };
     }
   }
@@ -508,31 +500,31 @@ class HomeController extends GetxController {
 
     if (val == -99 || val < 0) {
       return {
-        "status": "OFF / RUSAK",
+        "status": "OFF / FAULT",
         "color": Colors.grey,
-        "dampak": "Sensor nutrisi/TDS terputus.",
-        "penanganan": "Bersihkan atau kalibrasi probe TDS."
+        "dampak": "Nutrient/TDS sensor disconnected.",
+        "penanganan": "Clean or calibrate TDS probe."
       };
     } else if (val < minBatas) {
       return {
-        "status": "RENDAH",
+        "status": "LOW",
         "color": Colors.red,
-        "dampak": "Nutrisi di bawah target ${namaFaseAktif.value} (< $minBatas ppm). Daun kerdil.",
-        "penanganan": "Tambahkan pekat AB Mix."
+        "dampak": "Nutrient below ${namaFaseAktif.value} target (< $minBatas ppm). Stunted leaves.",
+        "penanganan": "Add concentrated AB Mix."
       };
     } else if (val > maxBatas) {
       return {
-        "status": "TINGGI",
+        "status": "HIGH",
         "color": Colors.red,
-        "dampak": "Nutrisi melebihi target ${namaFaseAktif.value} (> $maxBatas ppm). Akar terbakar.",
-        "penanganan": "Tambahkan air baku ke tandon."
+        "dampak": "Nutrient exceeds ${namaFaseAktif.value} target (> $maxBatas ppm). Root burn.",
+        "penanganan": "Add fresh water to reservoir."
       };
     } else {
       return {
         "status": "NORMAL",
         "color": Colors.green,
-        "dampak": "Asupan gizi ideal untuk ${namaFaseAktif.value} ($minBatas - $maxBatas ppm).",
-        "penanganan": "Pertahankan nutrisi."
+        "dampak": "Ideal nutrition for ${namaFaseAktif.value} ($minBatas - $maxBatas ppm).",
+        "penanganan": "Maintain nutrient level."
       };
     }
   }
@@ -541,31 +533,31 @@ class HomeController extends GetxController {
     double val = double.tryParse(phValue.value) ?? 0;
     if (val == -99 || val < 0) {
       return {
-        "status": "OFF / RUSAK",
+        "status": "OFF / FAULT",
         "color": Colors.grey,
-        "dampak": "Sensor pH bermasalah.",
-        "penanganan": "Kalibrasi ulang probe pH."
+        "dampak": "pH sensor malfunction.",
+        "penanganan": "Recalibrate pH probe."
       };
     } else if (val < phMin.value) {
       return {
-        "status": "ASAM",
+        "status": "ACIDIC",
         "color": Colors.red,
-        "dampak": "pH di bawah target (< ${phMin.value}). Akar rusak.",
-        "penanganan": "Tambahkan cairan pH Up."
+        "dampak": "pH below target (< ${phMin.value}). Root damage.",
+        "penanganan": "Add pH Up solution."
       };
     } else if (val > phMax.value) {
       return {
-        "status": "BASA",
+        "status": "ALKALINE",
         "color": Colors.red,
-        "dampak": "pH di atas target (> ${phMax.value}). Nutrisi tak terserap.",
-        "penanganan": "Tambahkan cairan pH Down."
+        "dampak": "pH above target (> ${phMax.value}). Poor nutrient uptake.",
+        "penanganan": "Add pH Down solution."
       };
     } else {
       return {
         "status": "NORMAL",
         "color": Colors.green,
-        "dampak": "Serapan nutrisi maksimal (${phMin.value} - ${phMax.value}).",
-        "penanganan": "Pertahankan pH."
+        "dampak": "Maximum nutrient absorption (${phMin.value} - ${phMax.value}).",
+        "penanganan": "Maintain pH level."
       };
     }
   }
@@ -577,16 +569,16 @@ class HomeController extends GetxController {
     String pStatus = phStatus.value.toUpperCase();
 
     List<String> sensorOffline = [];
-    if (sStatus.contains('OFF') || sStatus.contains('RUSAK')) sensorOffline.add("Suhu");
-    if (lStatus.contains('OFF') || lStatus.contains('RUSAK')) sensorOffline.add("Kelembapan");
-    if (nStatus.contains('OFF') || nStatus.contains('RUSAK')) sensorOffline.add("Nutrisi");
-    if (pStatus.contains('OFF') || pStatus.contains('RUSAK')) sensorOffline.add("pH Air");
+    if (sStatus.contains('OFF') || sStatus.contains('FAULT')) sensorOffline.add("Temperature");
+    if (lStatus.contains('OFF') || lStatus.contains('FAULT')) sensorOffline.add("Humidity");
+    if (nStatus.contains('OFF') || nStatus.contains('FAULT')) sensorOffline.add("Nutrient");
+    if (pStatus.contains('OFF') || pStatus.contains('FAULT')) sensorOffline.add("Water pH");
 
     if (sensorOffline.isNotEmpty) {
       String daftarOffline = sensorOffline.join(", ");
       return {
-        "judul": "Peringatan: Sensor Terputus!",
-        "deskripsi": "Sensor $daftarOffline terdeteksi offline / tidak terhubung. Segera periksa koneksi kabel modul.",
+        "judul": "Warning: Sensor Disconnected!",
+        "deskripsi": "$daftarOffline sensor detected offline / disconnected. Please check module cable connections immediately.",
         "status": "OFFLINE",
         "color": "red"
       };
@@ -594,38 +586,38 @@ class HomeController extends GetxController {
 
     if (sStatus == 'NORMAL' && lStatus == 'NORMAL' && nStatus == 'NORMAL' && pStatus == 'NORMAL') {
       return {
-        "judul": "Kondisi Tanaman Optimal",
-        "deskripsi": "Semua parameter ideal untuk fase ${namaFaseAktif.value}. Tanaman tumbuh dengan sehat.",
-        "status": "SEHAT",
+        "judul": "Optimal Plant Condition",
+        "deskripsi": "All parameters are ideal for the ${namaFaseAktif.value} phase. Plants are growing healthily.",
+        "status": "HEALTHY",
         "color": "green"
       };
     }
 
     List<String> masalahList = [];
-    if (sStatus == 'PANAS' || sStatus == 'TINGGI') masalahList.add("suhu terlalu panas");
-    if (sStatus == 'DINGIN' || sStatus == 'RENDAH') masalahList.add("suhu terlalu dingin");
-    if (lStatus == 'LEMBAP' || lStatus == 'SANGAT LEMBAP' || lStatus == 'TINGGI') masalahList.add("kelembapan terlalu tinggi");
-    if (lStatus == 'KERING' || lStatus == 'RENDAH') masalahList.add("kelembapan terlalu kering");
-    if (nStatus == 'TINGGI') masalahList.add("pekat nutrisi berlebihan (fase ${namaFaseAktif.value})");
-    if (nStatus == 'RENDAH') masalahList.add("kekurangan nutrisi (fase ${namaFaseAktif.value})");
-    if (pStatus == 'BASA' || pStatus == 'TINGGI') masalahList.add("pH air terlalu basa");
-    if (pStatus == 'ASAM' || pStatus == 'RENDAH') masalahList.add("pH air terlalu asam");
+    if (sStatus == 'HOT' || sStatus == 'HIGH') masalahList.add("temperature is too hot");
+    if (sStatus == 'COLD' || sStatus == 'LOW') masalahList.add("temperature is too cold");
+    if (lStatus == 'HUMID' || lStatus == 'HIGH') masalahList.add("humidity is too high");
+    if (lStatus == 'DRY' || lStatus == 'LOW') masalahList.add("humidity is too dry");
+    if (nStatus == 'HIGH') masalahList.add("excessive nutrient concentration (${namaFaseAktif.value} phase)");
+    if (nStatus == 'LOW') masalahList.add("nutrient deficiency (${namaFaseAktif.value} phase)");
+    if (pStatus == 'ALKALINE' || pStatus == 'HIGH') masalahList.add("water pH is too alkaline");
+    if (pStatus == 'ACIDIC' || pStatus == 'LOW') masalahList.add("water pH is too acidic");
 
     if (masalahList.isNotEmpty) {
       String gabunganMasalah = masalahList.join(", ");
       bool kritis = masalahList.length >= 3;
 
       return {
-        "judul": kritis ? "Kondisi Tanaman Kritis!" : "Kondisi Tanaman Perlu Perhatian",
-        "deskripsi": "Tanaman mengalami kendala karena $gabunganMasalah. Segera lakukan penyesuaian parameter.",
-        "status": kritis ? "BAHAYA" : "PERHATIAN",
+        "judul": kritis ? "Critical Plant Condition!" : "Plant Condition Needs Attention",
+        "deskripsi": "Plants are experiencing issues because $gabunganMasalah. Please adjust parameters immediately.",
+        "status": kritis ? "DANGER" : "WARNING",
         "color": kritis ? "red" : "orange"
       };
     }
 
     return {
-      "judul": "Status Normal",
-      "deskripsi": "Sistem memantau kondisi tanaman secara penuh.",
+      "judul": "Normal Status",
+      "deskripsi": "System is actively monitoring plant conditions.",
       "status": "NORMAL",
       "color": "green"
     };

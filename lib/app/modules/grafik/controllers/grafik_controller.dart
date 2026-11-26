@@ -67,10 +67,10 @@ class GrafikController extends GetxController {
   var selectedDate = DateTime.now().obs;
   var isLoading = true.obs;
 
-  // FILTER PERIODE TREN (1 Hari, 7 Hari, 15 Hari, 1 Bulan)
-  var selectedRange = '1 Bulan'.obs; 
+  // TREND PERIOD FILTER (1 Day, 7 Days, 15 Days, 1 Month)
+  var selectedRange = '1 Month'.obs; 
 
-  // TOGGLE VISIBILITY PARAMETER
+  // PARAMETER VISIBILITY TOGGLE
   var paramVisibility = <String, bool>{
     'Suhu': true,
     'Kelembapan': true,
@@ -85,7 +85,7 @@ class GrafikController extends GetxController {
 
   void changeRange(String range) {
     selectedRange.value = range;
-    selectedHour.value = null; // Reset detail popup saat ganti mode
+    selectedHour.value = null;
     fetchAllGrafikData(selectedDate.value);
   }
 
@@ -97,7 +97,6 @@ class GrafikController extends GetxController {
 
   var listAnomali = <AnomaliModel>[].obs;
 
-  // Data 1 Hari Utama & Komparasi (Kompatibilitas)
   var suhuHourly = <HourlyData>[].obs;
   var lembapHourly = <HourlyData>[].obs;
   var phHourly = <HourlyData>[].obs;
@@ -113,9 +112,9 @@ class GrafikController extends GetxController {
   var phContinuous = <ContinuousSpotData>[].obs;
   var nutrisiContinuous = <ContinuousSpotData>[].obs;
 
-  var continuousDateLabels = <Map<String, dynamic>>[].obs;
+  var continuousDateLabels = [].obs;
 
-  // VARIABEL DATA SPOTS UNTUK GRAFIK VIEW
+  // SPOTS DATA VARIABLES FOR CHART VIEW
   var suhuSpots = <double>[].obs;
   var lembapSpots = <double>[].obs;
   var phSpots = <double>[].obs;
@@ -156,20 +155,20 @@ class GrafikController extends GetxController {
   Map<String, String>? _evaluasiParameter(String jenis, double val) {
     switch (jenis) {
       case 'suhu':
-        if (val < suhuMin) return {"status": "DINGIN (< $suhuMin °C)"};
-        if (val > suhuMax) return {"status": "PANAS (> $suhuMax °C)"};
+        if (val < suhuMin) return {"status": "COLD (< $suhuMin °C)"};
+        if (val > suhuMax) return {"status": "HOT (> $suhuMax °C)"};
         break;
       case 'kelembapan':
-        if (val < lembapMin) return {"status": "KERING (< $lembapMin %)"};
-        if (val > lembapMax) return {"status": "LEMBAP (> $lembapMax %)"};
+        if (val < lembapMin) return {"status": "DRY (< $lembapMin %)"};
+        if (val > lembapMax) return {"status": "HUMID (> $lembapMax %)"};
         break;
       case 'ph':
-        if (val < phMin) return {"status": "ASAM (< $phMin)"};
-        if (val > phMax) return {"status": "BASA (> $phMax)"};
+        if (val < phMin) return {"status": "ACIDIC (< $phMin)"};
+        if (val > phMax) return {"status": "ALKALINE (> $phMax)"};
         break;
       case 'nutrisi':
-        if (val < nutrisiMin) return {"status": "RENDAH (< $nutrisiMin PPM)"};
-        if (val > nutrisiMax) return {"status": "TINGGI (> $nutrisiMax PPM)"};
+        if (val < nutrisiMin) return {"status": "LOW (< $nutrisiMin PPM)"};
+        if (val > nutrisiMax) return {"status": "HIGH (> $nutrisiMax PPM)"};
         break;
     }
     return null;
@@ -191,11 +190,10 @@ class GrafikController extends GetxController {
         List<AnomaliModel> tempAnomali = [];
 
         int totalPoint = 30;
-        if (selectedRange.value == '1 Hari') totalPoint = 24;
-        if (selectedRange.value == '7 Hari') totalPoint = 7;
-        if (selectedRange.value == '15 Hari') totalPoint = 15;
-        if (selectedRange.value == '1 Bulan') {
-          // Jumlah hari persis dalam bulan kalender terpilih (28, 29, 30, atau 31 hari)
+        if (selectedRange.value == '1 Day') totalPoint = 24;
+        if (selectedRange.value == '7 Days') totalPoint = 7;
+        if (selectedRange.value == '15 Days') totalPoint = 15;
+        if (selectedRange.value == '1 Month') {
           totalPoint = DateTime(targetDate.year, targetDate.month + 1, 0).day;
         }
 
@@ -205,17 +203,16 @@ class GrafikController extends GetxController {
         Map<int, List<double>> mNutrisi = {for (var i = 1; i <= totalPoint; i++) i: []};
         Map<int, String> tempLabels = {};
 
-        // INISIALISASI LABEL SUMBU X
-        if (selectedRange.value == '1 Hari') {
+        // X-AXIS LABEL INITIALIZATION
+        if (selectedRange.value == '1 Day') {
           for (int h = 0; h < 24; h++) {
             tempLabels[h + 1] = '${h.toString().padLeft(2, '0')}:00';
           }
-        } else if (selectedRange.value == '1 Bulan') {
-          // Label murni nomor tanggal kalender (Tgl 1 - Tgl 30/31)
+        } else if (selectedRange.value == '1 Month') {
           for (int d = 1; d <= totalPoint; d++) {
-            tempLabels[d] = "Tgl $d";
+            tempLabels[d] = "Day $d";
           }
-        } else { // 7 Hari atau 15 Hari Mundur dari Tanggal Pilihan
+        } else {
           for (int i = 0; i < totalPoint; i++) {
             DateTime d = targetDate.subtract(Duration(days: (totalPoint - 1) - i));
             tempLabels[i + 1] = DateFormat('dd/MM').format(d);
@@ -253,18 +250,17 @@ class GrafikController extends GetxController {
               if (recordTime != null) {
                 int targetIndex = -1;
 
-                if (selectedRange.value == '1 Hari') {
+                if (selectedRange.value == '1 Day') {
                   if (recordTime.year == targetDate.year &&
                       recordTime.month == targetDate.month &&
                       recordTime.day == targetDate.day) {
-                    targetIndex = recordTime.hour + 1; // Slot Jam 00:00 - 23:00 (1 - 24)
+                    targetIndex = recordTime.hour + 1;
                   }
-                } else if (selectedRange.value == '1 Bulan') {
-                  // 🔥 MURNI FILTER PER BULAN KALENDER (1 s.d. Tanggal Terakhir Bulan)
+                } else if (selectedRange.value == '1 Month') {
                   if (recordTime.year == targetDate.year && recordTime.month == targetDate.month) {
-                    targetIndex = recordTime.day; // Slot Tanggal Asli (1 - 31)
+                    targetIndex = recordTime.day;
                   }
-                } else { // 7 Hari atau 15 Hari
+                } else {
                   for (int i = 0; i < totalPoint; i++) {
                     DateTime dayCheck = targetDate.subtract(Duration(days: (totalPoint - 1) - i));
                     if (recordTime.year == dayCheck.year &&
@@ -284,7 +280,7 @@ class GrafikController extends GetxController {
                     if (_nilaiValid('suhu', n)) {
                       mSuhu[targetIndex]?.add(n);
                       var eval = _evaluasiParameter('suhu', n);
-                      if (eval != null) _addAnomali(tempAnomali, 'Suhu', jamFormat, n, eval['status']!);
+                      if (eval != null) _addAnomali(tempAnomali, 'Temperature', jamFormat, n, eval['status']!);
                     }
                   }
 
@@ -293,7 +289,7 @@ class GrafikController extends GetxController {
                     if (_nilaiValid('kelembapan', n)) {
                       mLembap[targetIndex]?.add(n);
                       var eval = _evaluasiParameter('kelembapan', n);
-                      if (eval != null) _addAnomali(tempAnomali, 'Kelembapan', jamFormat, n, eval['status']!);
+                      if (eval != null) _addAnomali(tempAnomali, 'Humidity', jamFormat, n, eval['status']!);
                     }
                   }
 
@@ -302,7 +298,7 @@ class GrafikController extends GetxController {
                     if (_nilaiValid('ph', n)) {
                       mPh[targetIndex]?.add(n);
                       var eval = _evaluasiParameter('ph', n);
-                      if (eval != null) _addAnomali(tempAnomali, 'pH Air', jamFormat, n, eval['status']!);
+                      if (eval != null) _addAnomali(tempAnomali, 'Water pH', jamFormat, n, eval['status']!);
                     }
                   }
 
@@ -311,7 +307,7 @@ class GrafikController extends GetxController {
                     if (_nilaiValid('nutrisi', n)) {
                       mNutrisi[targetIndex]?.add(n);
                       var eval = _evaluasiParameter('nutrisi', n);
-                      if (eval != null) _addAnomali(tempAnomali, 'Nutrisi', jamFormat, n, eval['status']!);
+                      if (eval != null) _addAnomali(tempAnomali, 'Nutrient', jamFormat, n, eval['status']!);
                     }
                   }
                 }
@@ -328,7 +324,7 @@ class GrafikController extends GetxController {
         listAnomali.assignAll(tempAnomali);
         isLoading.value = false;
       } catch (e) {
-        developer.log("Error Grafik", name: "GrafikController", error: e);
+        developer.log("Chart Error", name: "GrafikController", error: e);
         isLoading.value = false;
       }
     });

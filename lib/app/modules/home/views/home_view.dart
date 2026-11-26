@@ -17,7 +17,7 @@ class HomeView extends GetView<HomeController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 1. BANNER UPDATE TERAKHIR
+            // 1. LAST UPDATE BANNER
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -27,7 +27,7 @@ class HomeView extends GetView<HomeController> {
               ),
               child: Obx(
                 () => Text(
-                  "Update Terakhir : ${controller.lastUpdateTime.value}",
+                  "Last Update : ${controller.lastUpdateTime.value}",
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 11,
@@ -39,7 +39,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 6),
 
-            // 🟢 1.5 WIDGET COMPACT PEMILIH FASE (DROPDOWN DINAMIS BERANDA) 🟢
+            // 1.5 COMPACT PHASE SELECTOR WIDGET
             Obx(
               () => Container(
                 width: double.infinity,
@@ -53,7 +53,7 @@ class HomeView extends GetView<HomeController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Fase: ",
+                      "Phase: ",
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -77,15 +77,15 @@ class HomeView extends GetView<HomeController> {
                         items: [
                           DropdownMenuItem(
                             value: 'semai',
-                            child: Text('Semai (${controller.semaiMin.value}-${controller.semaiMax.value} ppm)'),
+                            child: Text('Seedling (${controller.semaiMin.value}-${controller.semaiMax.value} ppm)'),
                           ),
                           DropdownMenuItem(
                             value: 'veg_awal',
-                            child: Text('Veg Awal (${controller.vegAwalMin.value}-${controller.vegAwalMax.value} ppm)'),
+                            child: Text('Early Veg (${controller.vegAwalMin.value}-${controller.vegAwalMax.value} ppm)'),
                           ),
                           DropdownMenuItem(
                             value: 'veg_lanjutan',
-                            child: Text('Veg Lanjutan (${controller.vegLanjutanMin.value}-${controller.vegLanjutanMax.value} ppm)'),
+                            child: Text('Late Veg (${controller.vegLanjutanMin.value}-${controller.vegLanjutanMax.value} ppm)'),
                           ),
                         ],
                         onChanged: (String? faseBaru) {
@@ -101,7 +101,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 6),
 
-            // 2. GRID SENSOR 2x2
+            // 2. 2x2 SENSOR GRID
             Obx(() {
               final suhu = controller.getSuhuInfo();
               final lembap = controller.getLembapInfo();
@@ -118,7 +118,7 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   _buildSensorCard(
                     imagePath: 'assets/images/thermometer.png',
-                    title: "Suhu",
+                    title: "Temperature",
                     valObs: controller.suhuValue,
                     status: suhu["status"] ?? controller.suhuStatus.value,
                     statusColor: suhu["color"] ?? controller.suhuStatusColor.value,
@@ -129,7 +129,7 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/humidity.png',
-                    title: "Kelembapan",
+                    title: "Humidity",
                     valObs: controller.lembapValue,
                     status: lembap["status"] ?? controller.lembapStatus.value,
                     statusColor: lembap["color"] ?? controller.lembapStatusColor.value,
@@ -140,7 +140,7 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/nutrition.png',
-                    title: "Nutrisi",
+                    title: "Nutrient",
                     valObs: controller.nutrisiValue,
                     status: nutrisi["status"] ?? controller.nutrisiStatus.value,
                     statusColor: nutrisi["color"] ?? controller.nutrisiStatusColor.value,
@@ -151,7 +151,7 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/ph.png',
-                    title: "pH Air",
+                    title: "Water pH",
                     valObs: controller.phValue,
                     status: ph["status"] ?? controller.phStatus.value,
                     statusColor: ph["color"] ?? controller.phStatusColor.value,
@@ -165,7 +165,7 @@ class HomeView extends GetView<HomeController> {
             }),
             const SizedBox(height: 8),
 
-            // 3. STATUS KESELURUHAN (LIVE STATUS FEED)
+            // 3. OVERALL STATUS (LIVE STATUS FEED)
             Obx(() {
               if (controller.chatLogs.isEmpty) {
                 return const SizedBox.shrink();
@@ -210,7 +210,7 @@ class HomeView extends GetView<HomeController> {
                         ),
                         const Spacer(),
                         Text(
-                          "${controller.chatLogs.length}/5 log",
+                          "${controller.chatLogs.length}/5 logs",
                           style: const TextStyle(fontSize: 9, color: Colors.black38),
                         ),
                       ],
@@ -406,7 +406,7 @@ class HomeView extends GetView<HomeController> {
             const SizedBox(height: 6),
 
             Text(
-              "Dampak: ${dampak ?? '-'}",
+              "Impact: ${dampak ?? '-'}",
               style: const TextStyle(
                 fontSize: 9.5,
                 color: Colors.white,
@@ -415,7 +415,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 2),
             Text(
-              "Solusi: ${penanganan ?? '-'}",
+              "Action: ${penanganan ?? '-'}",
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.bold,

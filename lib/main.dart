@@ -15,20 +15,20 @@ import 'app/routes/app_pages.dart';
 import 'app/modules/home/controllers/home_controller.dart';
 
 List<List<dynamic>> riwayatCSV = [
-  ["Client Timestamp (HP)", "Received At (Epoch)", "Timestamp Firebase", "Suhu (C)", "Kelembapan (%)", "Nutrisi (PPM)", "pH"]
+  ["Client Timestamp (Phone)", "Received At (Epoch)", "Firebase Timestamp", "Temperature (C)", "Humidity (%)", "Nutrient (PPM)", "pH"]
 ];
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (kDebugMode) {
-    debugPrint("🔔 [BACKGROUND] Ada bahaya: ${message.notification?.title}");
+    debugPrint("🔔 [BACKGROUND] Critical alert: ${message.notification?.title}");
   }
 }
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'growsense_channel', 
-  'Peringatan GrowSense', 
-  description: 'Channel untuk notifikasi kritis tanaman',
+  'GrowSense Alert', 
+  description: 'Channel for critical plant notifications',
   importance: Importance.max,
   sound: RawResourceAndroidNotificationSound('suara_growsense'), 
   playSound: true,
@@ -39,17 +39,14 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 1. Inisialisasi Firebase Sekali Saja
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  await initializeDateFormatting('id_ID', null);
+  await initializeDateFormatting('en_US', null);
 
-  // 2. Pantau & catat CSV lokal di background
   pantauDataSensorTanpaUI();
 
-  // 3. Inisialisasi Local Notifications
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
@@ -70,18 +67,17 @@ void main() async {
   await messaging.subscribeToTopic('growsense_peringatan');
 
   if (kDebugMode) {
-    debugPrint("✅ Aplikasi sukses berlangganan channel growsense_peringatan!");
+    debugPrint("✅ App successfully subscribed to growsense_peringatan channel!");
   }
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // 4. Listener FCM Foreground Notification
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
     if (notification != null && android != null) {
-      String titleText = notification.title ?? "Peringatan GrowSense";
+      String titleText = notification.title ?? "GrowSense Alert";
       String bodyText = notification.body ?? "";
 
       flutterLocalNotificationsPlugin.show(
@@ -111,7 +107,6 @@ void main() async {
     }
   });
 
-  // 5. Mendaftarkan HomeController secara Permanent Global
   Get.put(HomeController(), permanent: true);
 
   runApp(const MyApp());
@@ -148,7 +143,7 @@ void pantauDataSensorTanpaUI() {
       var kelembapan = data['kelembapan'] ?? 0;
       var nutrisi = data['nutrisi'] ?? 0;
       var ph = data['ph'] ?? 0;
-      var timestampFirebase = data['timestamp_server'] ?? 'Tanpa TS Gateway';
+      var timestampFirebase = data['timestamp_server'] ?? 'No TS Gateway';
 
       try {
         final Directory? dir = await getExternalStorageDirectory(); 
@@ -157,12 +152,12 @@ void pantauDataSensorTanpaUI() {
         if (!await file.exists()) {
           String headerCsv = const ListToCsvConverter().convert([
             [
-              "Client Timestamp (HP)", 
+              "Client Timestamp (Phone)", 
               "Received At (Epoch)", 
-              "Timestamp Firebase", 
-              "Suhu (C)", 
-              "Kelembapan (%)", 
-              "Nutrisi (PPM)", 
+              "Firebase Timestamp", 
+              "Temperature (C)", 
+              "Humidity (%)", 
+              "Nutrient (PPM)", 
               "pH"
             ]
           ]);
@@ -183,7 +178,7 @@ void pantauDataSensorTanpaUI() {
         await file.writeAsString("$csvBarisBaru\n", mode: FileMode.append);
 
       } catch (e) {
-        if (kDebugMode) debugPrint("❌ Gagal simpan CSV Lokal: $e");
+        if (kDebugMode) debugPrint("❌ Failed to save local CSV: $e");
       }
     }
   });

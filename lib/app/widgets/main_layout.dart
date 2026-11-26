@@ -41,12 +41,11 @@ class MainLayout extends StatelessWidget {
         return nameFromEmail[0].toUpperCase() + nameFromEmail.substring(1);
       }
     }
-    return "Pengguna";
+    return "User";
   }
 
-      // 🔴 DIALOG EDIT AMBANG BATAS PARAMETER & FASE (FIX PENYIMPANAN FASE) 🔴
+  // EDIT PARAMETER & PHASE THRESHOLDS DIALOG
   void _showDialogEditAmbangBatas(BuildContext context, HomeController homeController) {
-    // Controller input teks untuk ambang batas umum
     final suhuMinC = TextEditingController(text: homeController.suhuMin.value.toString());
     final suhuMaxC = TextEditingController(text: homeController.suhuMax.value.toString());
     final lembapMinC = TextEditingController(text: homeController.lembapMin.value.toString());
@@ -54,7 +53,6 @@ class MainLayout extends StatelessWidget {
     final phMinC = TextEditingController(text: homeController.phMin.value.toString());
     final phMaxC = TextEditingController(text: homeController.phMax.value.toString());
 
-    // Controller input teks untuk nutrisi per fase (diberi nilai default awal agar tidak terbaca 0)
     final semaiMinC = TextEditingController(text: homeController.semaiMin.value > 0 ? homeController.semaiMin.value.toString() : "400");
     final semaiMaxC = TextEditingController(text: homeController.semaiMax.value > 0 ? homeController.semaiMax.value.toString() : "600");
     final vegAwalMinC = TextEditingController(text: homeController.vegAwalMin.value > 0 ? homeController.vegAwalMin.value.toString() : "600");
@@ -62,7 +60,6 @@ class MainLayout extends StatelessWidget {
     final vegLanjutanMinC = TextEditingController(text: homeController.vegLanjutanMin.value > 0 ? homeController.vegLanjutanMin.value.toString() : "750");
     final vegLanjutanMaxC = TextEditingController(text: homeController.vegLanjutanMax.value > 0 ? homeController.vegLanjutanMax.value.toString() : "1000");
 
-    // Ambil data nutrisi fase terkini langsung dari Firebase saat dialog dibuka
     final DatabaseReference dbRef = FirebaseDatabase.instance.ref('pengaturan/fase');
     dbRef.get().then((snapshot) {
       if (snapshot.exists && snapshot.value != null) {
@@ -102,7 +99,7 @@ class MainLayout extends StatelessWidget {
                         Icon(Icons.tune_rounded, color: Color(0xFF2E7D32)),
                         SizedBox(width: 8),
                         Text(
-                          "Edit Ambang Batas",
+                          "Edit Thresholds",
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -116,8 +113,8 @@ class MainLayout extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 6),
 
-                // 🌡️ 1. SUHU
-                const Text("Suhu (°C):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
+                // 1. TEMPERATURE
+                const Text("Temperature (°C):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -128,8 +125,8 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 💧 2. KELEMBAPAN
-                const Text("Kelembapan (%):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
+                // 2. HUMIDITY
+                const Text("Humidity (%):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -140,8 +137,8 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 🧪 3. PH AIR
-                const Text("pH Air:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
+                // 3. WATER PH
+                const Text("Water pH:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -154,12 +151,12 @@ class MainLayout extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 6),
 
-                // 🌱 4. NUTRISI PER FASE
-                const Text("Target Nutrisi Fase (PPM):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
+                // 4. NUTRIENT PER PHASE
+                const Text("Phase Nutrient Targets (PPM):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
                 const SizedBox(height: 8),
 
-                // Fase Semai
-                const Text("Fase Semai:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                // Seedling Phase
+                const Text("Seedling Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -170,8 +167,8 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
 
-                // Fase Veg Awal
-                const Text("Fase Vegetatif Awal:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                // Early Vegetative Phase
+                const Text("Early Vegetative Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -182,8 +179,8 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
 
-                // Fase Veg Lanjutan
-                const Text("Fase Vegetatif Lanjutan:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                // Late Vegetative Phase
+                const Text("Late Vegetative Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -194,7 +191,7 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // 🟢 TOMBOL SIMPAN
+                // SAVE BUTTON
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -205,9 +202,8 @@ class MainLayout extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     icon: const Icon(Icons.save_rounded, size: 18),
-                    label: const Text("Simpan Perubahan", style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text("Save Changes", style: TextStyle(fontWeight: FontWeight.bold)),
                     onPressed: () async {
-                      // 1. VALIDASI BLACK-BOX: CEK APAKAH ADA KOLOM YANG KOSONG
                       if (suhuMinC.text.trim().isEmpty || suhuMaxC.text.trim().isEmpty ||
                           lembapMinC.text.trim().isEmpty || lembapMaxC.text.trim().isEmpty ||
                           phMinC.text.trim().isEmpty || phMaxC.text.trim().isEmpty ||
@@ -215,16 +211,15 @@ class MainLayout extends StatelessWidget {
                           vegAwalMinC.text.trim().isEmpty || vegAwalMaxC.text.trim().isEmpty ||
                           vegLanjutanMinC.text.trim().isEmpty || vegLanjutanMaxC.text.trim().isEmpty) {
                         Get.snackbar(
-                          'Peringatan Validasi',
-                          'Seluruh kolom ambang batas wajib diisi dan tidak boleh kosong!',
+                          'Validation Warning',
+                          'All threshold fields are required and cannot be empty!',
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
                         );
-                        return; // Tolak simpan & dialog tetap terbuka
+                        return;
                       }
 
-                      // 2. PARSE INPUT KE NUMERIK
                       double sMin = double.tryParse(suhuMinC.text) ?? 0;
                       double sMax = double.tryParse(suhuMaxC.text) ?? 0;
                       double lMin = double.tryParse(lembapMinC.text) ?? 0;
@@ -239,33 +234,30 @@ class MainLayout extends StatelessWidget {
                       int vegLanjutanMin = (double.tryParse(vegLanjutanMinC.text) ?? 0).toInt();
                       int vegLanjutanMax = (double.tryParse(vegLanjutanMaxC.text) ?? 0).toInt();
 
-                      // 3. VALIDASI BLACK-BOX: NILAI 0 ATAU NEGATIF
                       if (sMin <= 0 || sMax <= 0 || lMin <= 0 || lMax <= 0 || pMin <= 0 || pMax <= 0 ||
                           semaiMin <= 0 || semaiMax <= 0 || vegAwalMin <= 0 || vegAwalMax <= 0 || vegLanjutanMin <= 0 || vegLanjutanMax <= 0) {
                         Get.snackbar(
-                          'Peringatan Validasi',
-                          'Nilai batas parameter tidak boleh 0 atau bernilai negatif!',
+                          'Validation Warning',
+                          'Parameter threshold values cannot be 0 or negative!',
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
                         );
-                        return; // Tolak simpan & dialog tetap terbuka
+                        return;
                       }
 
-                      // 4. VALIDASI BLACK-BOX: MIN >= MAX
                       if (sMin >= sMax || lMin >= lMax || pMin >= pMax ||
                           semaiMin >= semaiMax || vegAwalMin >= vegAwalMax || vegLanjutanMin >= vegLanjutanMax) {
                         Get.snackbar(
-                          'Peringatan Validasi',
-                          'Nilai batas minimum tidak boleh lebih besar atau sama dengan batas maksimum!',
+                          'Validation Warning',
+                          'Minimum threshold cannot be greater than or equal to maximum threshold!',
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
                         );
-                        return; // Tolak simpan & dialog tetap terbuka
+                        return;
                       }
 
-                      // 5. TUTUP DIALOG & SIMPAN KE FIREBASE
                       Navigator.of(context).pop();
 
                       await homeController.updateBatasUmum(
@@ -287,8 +279,8 @@ class MainLayout extends StatelessWidget {
                       );
 
                       Get.snackbar(
-                        'Berhasil',
-                        'Seluruh ambang batas parameter berhasil diperbarui!',
+                        'Success',
+                        'All parameter thresholds have been updated!',
                         snackPosition: SnackPosition.TOP,
                         backgroundColor: Colors.green,
                         colorText: Colors.white,
@@ -319,7 +311,7 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  // ⚙️ BOTTOM SHEET PENGATURAN SYSTEM
+  // SYSTEM SETTINGS BOTTOM SHEET
   void _showSettingsBottomSheet(BuildContext context) {
     final homeController = Get.isRegistered<HomeController>()
         ? Get.find<HomeController>()
@@ -355,7 +347,7 @@ class MainLayout extends StatelessWidget {
                     Icon(Icons.settings_outlined, color: Color(0xFF2E7D32), size: 22),
                     SizedBox(width: 8),
                     Text(
-                      "Pengaturan Sistem",
+                      "System Settings",
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -369,7 +361,7 @@ class MainLayout extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 8),
 
-            // ☁️ ITEM 1: SINKRONISASI DRIVE
+            // ITEM 1: SYNC TO DRIVE
             Obx(() {
               bool isUploading = homeController.isUploadingToDrive.value;
               return ListTile(
@@ -390,11 +382,11 @@ class MainLayout extends StatelessWidget {
                       )
                     : const Icon(Icons.cloud_sync_outlined, color: Color(0xFF2E7D32), size: 24),
                 title: Text(
-                  isUploading ? "Menyinkronkan Data..." : "Sinkronkan Data ke Drive",
+                  isUploading ? "Syncing Data..." : "Sync Data to Drive",
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
                 subtitle: const Text(
-                  "Unggah file log_growsense_v2.csv lokal HP ke Google Drive untuk analisis delay data.",
+                  "Upload local log_growsense_v2.csv file to Google Drive for data delay analysis.",
                   style: TextStyle(fontSize: 11, color: Colors.black54),
                 ),
                 onTap: isUploading
@@ -407,7 +399,7 @@ class MainLayout extends StatelessWidget {
             }),
             const SizedBox(height: 8),
 
-            // 🎛️ ITEM 2: EDIT AMBANG BATAS PARAMETER & FASE
+            // ITEM 2: EDIT PARAMETER & PHASE THRESHOLDS
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               shape: RoundedRectangleBorder(
@@ -417,16 +409,16 @@ class MainLayout extends StatelessWidget {
               tileColor: const Color(0xFFF0F4F0),
               leading: const Icon(Icons.tune_rounded, color: Color(0xFF2E7D32), size: 24),
               title: const Text(
-                "Ubah Ambang Batas Parameter",
+                "Edit Parameter Thresholds",
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
               subtitle: const Text(
-                "Atur target Suhu, Kelembapan, pH, dan PPM Nutrisi untuk setiap fase tanaman.",
+                "Configure target Temperature, Humidity, pH, and Nutrient PPM for each plant phase.",
                 style: TextStyle(fontSize: 11, color: Colors.black54),
               ),
               onTap: () {
-                Get.back(); // Tutup bottom sheet
-                _showDialogEditAmbangBatas(context, homeController); // Buka dialog edit
+                Get.back();
+                _showDialogEditAmbangBatas(context, homeController);
               },
             ),
             const SizedBox(height: 12),
@@ -436,7 +428,7 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  // 🔔 BOTTOM SHEET LOG NOTIFIKASI
+  // NOTIFICATION LOG BOTTOM SHEET
   void _showNotificationLogBottomSheet(BuildContext context) {
     final DatabaseReference dbRef = FirebaseDatabase.instance.ref('log_notifikasi');
 
@@ -471,7 +463,7 @@ class MainLayout extends StatelessWidget {
                     Icon(Icons.notifications_active_rounded, color: Color(0xFF2E7D32), size: 22),
                     SizedBox(width: 8),
                     Text(
-                      "Log Peringatan Anomali",
+                      "Anomaly Alert Log",
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -495,7 +487,7 @@ class MainLayout extends StatelessWidget {
                   if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
                     return const Center(
                       child: Text(
-                        "Belum ada riwayat peringatan anomali.",
+                        "No anomaly alert history recorded yet.",
                         style: TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     );
@@ -507,7 +499,7 @@ class MainLayout extends StatelessWidget {
                   map.forEach((key, value) {
                     listLog.add({
                       'id': key,
-                      'judul': value['judul'] ?? 'Peringatan',
+                      'judul': value['judul'] ?? 'Alert',
                       'pesan': value['pesan'] ?? '',
                       'timestamp': value['timestamp'] ?? '-',
                       'waktuMs': value['waktuMs'] ?? 0,
@@ -542,7 +534,7 @@ class MainLayout extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "Waktu: ${item['timestamp']}",
+                              "Time: ${item['timestamp']}",
                               style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -570,7 +562,7 @@ class MainLayout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🌿 1. TOP APP BAR
+              // 1. TOP APP BAR
               Container(
                 height: 62,
                 width: double.infinity,
@@ -675,7 +667,7 @@ class MainLayout extends StatelessWidget {
                           
                           const Spacer(),
 
-                          // ⚙️ IKON PENGATURAN
+                          // SETTINGS ICON
                           IconButton(
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
@@ -695,7 +687,7 @@ class MainLayout extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
 
-                          // 🔔 IKON LONCENG NOTIFIKASI
+                          // NOTIFICATION BELL ICON
                           IconButton(
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
@@ -720,7 +712,7 @@ class MainLayout extends StatelessWidget {
                 ),
               ),
 
-              // 2. SUB-TAB MODEL SHOPEE
+              // 2. SUB-TABS
               if (showTabs)
                 Container(
                   width: double.infinity,
@@ -731,19 +723,22 @@ class MainLayout extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildShopeeStyleTab(
-                        label: 'Nilai',
+                        label: 'Values',
+                        tabKey: 'Nilai',
                         icon: Icons.dashboard_outlined,
                         activeIcon: Icons.dashboard_rounded,
                         route: '/home',
                       ),
                       _buildShopeeStyleTab(
-                        label: 'Riwayat',
+                        label: 'History',
+                        tabKey: 'Riwayat',
                         icon: Icons.history_outlined,
                         activeIcon: Icons.history_rounded,
                         route: '/riwayat',
                       ),
                       _buildShopeeStyleTab(
-                        label: 'Grafik',
+                        label: 'Chart',
+                        tabKey: 'Grafik',
                         icon: Icons.show_chart_outlined,
                         activeIcon: Icons.show_chart_rounded,
                         route: '/grafik',
@@ -752,7 +747,7 @@ class MainLayout extends StatelessWidget {
                   ),
                 ),
 
-              // 3. KONTEN UTAMA
+              // 3. MAIN CONTENT
               body,
             ],
           ),
@@ -794,16 +789,16 @@ class MainLayout extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined, size: 24),
               activeIcon: Icon(Icons.home_rounded, size: 24),
-              label: 'Beranda',
+              label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.menu_book_outlined, size: 24),
               activeIcon: Icon(Icons.menu_book_rounded, size: 24),
-              label: 'Panduan',
+              label: 'Guide',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.logout_rounded, size: 24),
-              label: 'Keluar',
+              label: 'Logout',
             ),
           ],
           onTap: (index) {
@@ -820,12 +815,12 @@ class MainLayout extends StatelessWidget {
                 break;
               case 2:
                 Get.defaultDialog(
-                  title: "Keluar",
+                  title: "Logout",
                   titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  middleText: "Apakah Anda yakin ingin keluar dari aplikasi?",
+                  middleText: "Are you sure you want to log out of the application?",
                   middleTextStyle: const TextStyle(fontSize: 13),
-                  textCancel: "Batal",
-                  textConfirm: "Keluar",
+                  textCancel: "Cancel",
+                  textConfirm: "Logout",
                   confirmTextColor: Colors.white,
                   buttonColor: const Color(0xFFD32F2F),
                   cancelTextColor: Colors.black87,
@@ -850,11 +845,12 @@ class MainLayout extends StatelessWidget {
 
   Widget _buildShopeeStyleTab({
     required String label,
+    required String tabKey,
     required IconData icon,
     required IconData activeIcon,
     required String route,
   }) {
-    bool isActive = activeTab == label;
+    bool isActive = activeTab == tabKey;
 
     return InkWell(
       onTap: () {

@@ -8,13 +8,11 @@ class RegisterController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Controller Form
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  // Observable Variables
   var isLoading = false.obs;
   var isObscurePassword = true.obs;
   var isObscureConfirmPassword = true.obs;
@@ -27,18 +25,16 @@ class RegisterController extends GetxController {
     isObscureConfirmPassword.value = !isObscureConfirmPassword.value;
   }
 
-  // --- FUNGSI REGISTRASI ---
   Future<void> register() async {
     String name = nameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
-    // 1. Validasi Field Kosong
     if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Semua bidang data harus diisi!',
+        'Warning',
+        'All fields must be filled in!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -46,11 +42,10 @@ class RegisterController extends GetxController {
       return;
     }
 
-    // 2. Validasi Konfirmasi Password
     if (password != confirmPassword) {
       Get.snackbar(
-        'Peringatan',
-        'Konfirmasi password tidak cocok dengan password!',
+        'Warning',
+        'Password confirmation does not match!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -58,11 +53,10 @@ class RegisterController extends GetxController {
       return;
     }
 
-    // 3. Validasi Panjang Password Minimal 6 Karakter
     if (password.length < 6) {
       Get.snackbar(
-        'Peringatan',
-        'Password minimal harus 6 karakter!',
+        'Warning',
+        'Password must be at least 6 characters!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -73,7 +67,6 @@ class RegisterController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 4. Buat Akun Baru di Firebase Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -82,10 +75,8 @@ class RegisterController extends GetxController {
       User? user = userCredential.user;
 
       if (user != null) {
-        // Update Display Name di Firebase Auth Profile
         await user.updateDisplayName(name);
 
-        // 5. Simpan Data Profil Pengguna ke Firestore Database
         await _firestore.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'nama': name,
@@ -95,29 +86,28 @@ class RegisterController extends GetxController {
         });
 
         Get.snackbar(
-          'Registrasi Berhasil',
-          'Akun berhasil dibuat. Selamat datang, $name!',
+          'Registration Successful',
+          'Account created successfully. Welcome, $name!',
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
 
-        // Langsung masuk ke Halaman Utama
         Get.offAllNamed(Routes.HOME);
       }
     } on FirebaseAuthException catch (e) {
-      String pesanError = 'Terjadi kesalahan saat pendaftaran.';
+      String pesanError = 'An error occurred during registration.';
 
       if (e.code == 'email-already-in-use') {
-        pesanError = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
+        pesanError = 'This email is already registered. Please use another email or log in.';
       } else if (e.code == 'invalid-email') {
-        pesanError = 'Format email tidak valid.';
+        pesanError = 'Invalid email format.';
       } else if (e.code == 'weak-password') {
-        pesanError = 'Password terlalu lemah. Gunakan kombinasi huruf dan angka.';
+        pesanError = 'Password is too weak. Use a combination of letters and numbers.';
       }
 
       Get.snackbar(
-        'Gagal Registrasi',
+        'Registration Failed',
         pesanError,
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.redAccent,

@@ -27,12 +27,12 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
   Widget build(BuildContext context) {
     return MainLayout(
       activeParameter: 'Panduan',
-      showTabs: false, // Mematikan tab Nilai | Riwayat | Grafik di halaman Panduan
+      showTabs: false,
       body: Container(
         color: const Color(0xFFEFF3EA),
         child: Column(
           children: [
-            // ⚪ BANNER HEADER PUTIH (TANPA LOGO)
+            // WHITE HEADER BANNER
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -51,7 +51,7 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Panduan Budidaya Cabai",
+                    "Chili Cultivation Guide",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -60,7 +60,7 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Target parameter sensor, fase tumbuh, & penanganan masalah.",
+                    "Sensor parameter targets, growth phases, & troubleshooting.",
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
@@ -70,7 +70,7 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
               ),
             ),
 
-            // TAB BAR NAVIGASI INTERNAL
+            // INTERNAL NAVIGATION TAB BAR
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               height: 40,
@@ -92,14 +92,14 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
                 unselectedLabelColor: Colors.grey,
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                 tabs: const [
-                  Tab(text: "Target Sensor"),
-                  Tab(text: "Fase Tumbuh"),
+                  Tab(text: "Sensor Targets"),
+                  Tab(text: "Growth Phases"),
                   Tab(text: "Troubleshooting"),
                 ],
               ),
             ),
 
-            // ISI TAB
+            // TAB CONTENT
             Builder(
               builder: (context) {
                 switch (_tabController.index) {
@@ -121,53 +121,53 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
     );
   }
 
-  // TAB 1: TARGET SENSOR (PAKAI GAMBAR LOGO DARI ASSETS/IMAGES/)
+  // TAB 1: SENSOR TARGETS
   Widget _buildTabTargetSensor() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _buildInfoCard(
-            title: "Suhu Air & Lingkungan",
+            title: "Water & Ambient Temperature",
             imagePath: 'assets/images/thermometer.png',
             child: const Column(
               children: [
-                _MetricRow(label: "Ideal Harian", value: "24°C - 28°C"),
-                _MetricRow(label: "Batas Maksimal", value: "32°C (Bunga rontok)"),
-                _MetricRow(label: "Batas Minimal", value: "20°C (Tumbuh lambat)"),
+                _MetricRow(label: "Daily Ideal", value: "24°C - 28°C"),
+                _MetricRow(label: "Maximum Limit", value: "32°C (Flower drop)"),
+                _MetricRow(label: "Minimum Limit", value: "20°C (Slow growth)"),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Kelembapan Udara (RH)",
+            title: "Air Humidity (RH)",
             imagePath: 'assets/images/humidity.png',
             child: const Column(
               children: [
-                _MetricRow(label: "Vegetatif (Awal)", value: "60% - 70%"),
-                _MetricRow(label: "Generatif (Buah)", value: "50% - 60%"),
-                _MetricRow(label: "Catatan", value: ">70% Rawan jamur"),
+                _MetricRow(label: "Vegetative (Early)", value: "60% - 70%"),
+                _MetricRow(label: "Generative (Fruiting)", value: "50% - 60%"),
+                _MetricRow(label: "Note", value: ">70% Prone to fungus"),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Kadar Nutrisi (PPM)",
+            title: "Nutrient Level (PPM)",
             imagePath: 'assets/images/nutrition.png',
             child: const Column(
               children: [
-                _MetricRow(label: "Semaian / Bibit", value: "300 - 500 ppm"),
-                _MetricRow(label: "Fase Vegetatif", value: "800 - 1.200 ppm"),
-                _MetricRow(label: "Fase Pembungaan", value: "1.500 - 2.100 ppm"),
+                _MetricRow(label: "Seedling", value: "300 - 500 ppm"),
+                _MetricRow(label: "Vegetative Phase", value: "800 - 1,200 ppm"),
+                _MetricRow(label: "Flowering Phase", value: "1,500 - 2,100 ppm"),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Derajat Keasaman (pH)",
+            title: "Acidity Level (pH)",
             imagePath: 'assets/images/ph.png',
             child: const Column(
               children: [
-                _MetricRow(label: "pH Optimal", value: "5.8 - 6.5"),
-                _MetricRow(label: "Batas Asam", value: "< 5.5 (Serapan Kalsium terganggu)"),
-                _MetricRow(label: "Batas Basa", value: "> 6.8 (Unsur Zat Besi terendap)"),
+                _MetricRow(label: "Optimal pH", value: "5.8 - 6.5"),
+                _MetricRow(label: "Acidic Limit", value: "< 5.5 (Calcium uptake disrupted)"),
+                _MetricRow(label: "Alkaline Limit", value: "> 6.8 (Iron precipitation)"),
               ],
             ),
           ),
@@ -176,34 +176,34 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
     );
   }
 
-  // TAB 2: FASE TUMBUH
+  // TAB 2: GROWTH PHASES
   Widget _buildTabFaseTumbuh() {
     return const Padding(
       padding: EdgeInsets.all(16),
       child: Column(
         children: [
           _StepCard(
-            step: "Fase 1",
-            title: "Penyemaian (Hari 1 - 14)",
-            desc: "Media rockwool basah. Jaga kelembapan tinggi dan beri nutrisi tipis (300-500 ppm) setelah daun sejati muncul.",
+            step: "Phase 1",
+            title: "Seeding (Days 1 - 14)",
+            desc: "Keep rockwool medium moist. Maintain high humidity and provide diluted nutrients (300-500 ppm) once true leaves appear.",
             badgeColor: Colors.blue,
           ),
           _StepCard(
-            step: "Fase 2",
-            title: "Vegetatif / Pertumbuhan (Hari 15 - 45)",
-            desc: "Target nutrisi 800 - 1.200 ppm. Lakukan perempelan tunas air di ketiak daun agar batang utama kokoh.",
+            step: "Phase 2",
+            title: "Vegetative / Growth (Days 15 - 45)",
+            desc: "Target nutrients at 800 - 1,200 ppm. Prune lateral suckers in leaf axils to strengthen the main stem.",
             badgeColor: Colors.green,
           ),
           _StepCard(
-            step: "Fase 3",
-            title: "Generatif & Pembuahan (Hari 46 - 80+)",
-            desc: "Tingkatkan nutrisi hingga 1.500 - 2.100 ppm (Tinggi Kalium). Jaga pH di 6.0 - 6.5 agar bunga tidak rontok.",
+            step: "Phase 3",
+            title: "Generative & Fruiting (Days 46 - 80+)",
+            desc: "Increase nutrients to 1,500 - 2,100 ppm (High Potassium). Maintain pH at 6.0 - 6.5 to prevent flower drop.",
             badgeColor: Colors.orange,
           ),
           _StepCard(
-            step: "Fase 4",
-            title: "Panen (Hari 80+)",
-            desc: "Cabai siap dipanen saat berwarna merah merata. Petik bersama tangkainya pada pagi/sore hari.",
+            step: "Phase 4",
+            title: "Harvest (Days 80+)",
+            desc: "Chilies are ready to harvest when evenly red. Pick with the stem intact during morning or late afternoon.",
             badgeColor: Colors.red,
           ),
         ],
@@ -218,26 +218,25 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
       child: Column(
         children: [
           _ProblemCard(
-            problem: "Bunga Cabai Sering Rontok",
-            cause: "Suhu terlalu panas (>32°C), kekurangan Kalium/Kalsium, atau pH terlampau asam/basa.",
-            solution: "Jaga pH 6.0 - 6.5, semprot kalsium foliar, dan gunakan paranet jika terik.",
+            problem: "Frequent Chili Flower Drop",
+            cause: "Excessive heat (>32°C), Potassium/Calcium deficiency, or overly acidic/alkaline pH.",
+            solution: "Maintain pH at 6.0 - 6.5, spray foliar calcium, and use shade nets during intense sunlight.",
           ),
           _ProblemCard(
-            problem: "Daun Keriting / Menggulung",
-            cause: "Serangan hama thrips/kutu daun, atau kelembapan udara terlalu rendah.",
-            solution: "Semprot pestisida nabati (minyak mimba/air sabun cuci piring tipis) sore hari.",
+            problem: "Curled / Rolled Leaves",
+            cause: "Thrips or aphid pest infestation, or excessively low air humidity.",
+            solution: "Spray organic pesticide (neem oil or diluted dish soap solution) in the late afternoon.",
           ),
           _ProblemCard(
-            problem: "Busuk Ujung Buah (Blossom End Rot)",
-            cause: "Defisiensi Kalsium (Ca) atau sirkulasi pompa air terhambat.",
-            solution: "Koreksi pH air ke batas ideal (5.8 - 6.5) & pastikan sirkulasi air lancar.",
+            problem: "Blossom End Rot",
+            cause: "Calcium (Ca) deficiency or obstructed water pump circulation.",
+            solution: "Adjust water pH to the ideal range (5.8 - 6.5) and ensure smooth water circulation.",
           ),
         ],
       ),
     );
   }
 
-  // WIDGET CARD MENGGUNAKAN IMAGE PATH ASSETS
   Widget _buildInfoCard({
     required String title,
     required String imagePath,
@@ -276,7 +275,6 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
   }
 }
 
-// COMPONENT HELPER WIDGETS
 class _MetricRow extends StatelessWidget {
   final String label;
   final String value;
@@ -381,7 +379,7 @@ class _ProblemCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text("Penyebab: $cause", style: const TextStyle(fontSize: 11, color: Colors.black87)),
+          Text("Cause: $cause", style: const TextStyle(fontSize: 11, color: Colors.black87)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.all(8),
@@ -390,7 +388,7 @@ class _ProblemCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(1),
             ),
             child: Text(
-              "Solusi: $solution",
+              "Solution: $solution",
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF2E4F32)),
             ),
           ),

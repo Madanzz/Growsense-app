@@ -20,14 +20,12 @@ class RiwayatController extends GetxController {
 
   final RxString activeParameter = 'Suhu'.obs;
 
-  // Penyimpanan sementara di RAM agar pindah tab instan tanpa loading ulang
   static List _cachedRiwayatData = [];
   static DateTime? _cachedTanggal;
   static TimeOfDay? _cachedJamMulai;
   static TimeOfDay? _cachedJamSelesai;
   static bool _hasInitialCache = false;
 
-  // Helper jam mulai bawaan: 2 jam terakhir di hari yang sama
   static TimeOfDay _defaultJamMulai() {
     final now = DateTime.now();
     if (now.hour < 2) {
@@ -36,19 +34,16 @@ class RiwayatController extends GetxController {
     return TimeOfDay(hour: now.hour - 2, minute: now.minute);
   }
 
-  // State Filter Waktu
   final Rx<DateTime> tanggalPilihan = DateTime.now().obs;
   final Rx<TimeOfDay> jamMulai = _defaultJamMulai().obs;
   final Rx<TimeOfDay> jamSelesai = TimeOfDay.now().obs;
 
-  // Data, Pagination Layar & Loading State
   final RxList riwayatData = [].obs;
   final RxInt jumlahTampil = 100.obs;
   final RxBool isLoading = false.obs;
 
-  // State Dinamis Fase Nutrisi dari Firebase
   final RxString faseAktif = 'semai'.obs;
-  final RxString namaFaseAktif = 'Semai'.obs;
+  final RxString namaFaseAktif = 'Seedling'.obs;
   final RxDouble nutrisiMinAktif = 400.0.obs;
   final RxDouble nutrisiMaxAktif = 600.0.obs;
 
@@ -60,7 +55,6 @@ class RiwayatController extends GetxController {
     }
     _listenPengaturanFirebase();
 
-    // Jika sudah pernah memuat data sebelumnya, langsung tampilkan dari RAM tanpa loading ulang
     if (_hasInitialCache) {
       if (_cachedTanggal != null) tanggalPilihan.value = _cachedTanggal!;
       if (_cachedJamMulai != null) jamMulai.value = _cachedJamMulai!;
@@ -77,12 +71,10 @@ class RiwayatController extends GetxController {
     super.onClose();
   }
 
-  // Tambah jumlah baris yang ditampilkan di layar jika data lebih dari 100
   void tampilkanLebihBanyak() {
     jumlahTampil.value += 100;
   }
 
-  // Listen Firebase untuk rentang nutrisi aktif
   void _listenPengaturanFirebase() {
     _pengaturanSubscription?.cancel();
     _pengaturanSubscription = _dbRef.child('pengaturan').onValue.listen((event) {
@@ -99,11 +91,11 @@ class RiwayatController extends GetxController {
           nutrisiMaxAktif.value = double.parse((detailFase['nutrisiMax'] ?? 600).toString());
 
           if (fase == 'semai') {
-            namaFaseAktif.value = 'Semai';
+            namaFaseAktif.value = 'Seedling';
           } else if (fase == 'veg_awal') {
-            namaFaseAktif.value = 'Vegetatif Awal';
+            namaFaseAktif.value = 'Early Vegetative';
           } else if (fase == 'veg_lanjutan') {
-            namaFaseAktif.value = 'Vegetatif Lanjutan';
+            namaFaseAktif.value = 'Late Vegetative';
           } else {
             namaFaseAktif.value = detailFase['nama'] ?? fase;
           }
@@ -112,14 +104,13 @@ class RiwayatController extends GetxController {
         riwayatData.refresh();
       }
     }, onError: (error) {
-      debugPrint("🚨 Error Realtime Pengaturan di Riwayat: $error");
+      debugPrint("🚨 Realtime Settings Error in History: $error");
     });
   }
 
-  // --- 1. MEMUAT DATA BERDASARKAN FILTER TANGGAL & JAM ---
   Future<void> muatDataRiwayat() async {
     isLoading.value = true;
-    jumlahTampil.value = 100; // Reset tampilan layar ke 100 baris pertama agar ringan
+    jumlahTampil.value = 100;
     try {
       DateTime dtMulai = DateTime(
         tanggalPilihan.value.year,
@@ -145,26 +136,23 @@ class RiwayatController extends GetxController {
       var result = await _sensorProvider.getRiwayatFiltered(dtMulai, dtSelesai);
       riwayatData.assignAll(result);
 
-      // Simpan hasil ke RAM
       _cachedRiwayatData = List.from(result);
       _cachedTanggal = tanggalPilihan.value;
       _cachedJamMulai = jamMulai.value;
       _cachedJamSelesai = jamSelesai.value;
       _hasInitialCache = true;
     } catch (e) {
-      debugPrint("Error saat memuat data riwayat: $e");
+      debugPrint("Error loading history data: $e");
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Bantuan Pengecekan Anomali Nutrisi Dinamis
   bool isNutrisiAbnormal(double vNutrisi) {
     if (vNutrisi == -99 || vNutrisi < 0) return true;
     return vNutrisi < nutrisiMinAktif.value || vNutrisi > nutrisiMaxAktif.value;
   }
 
-  // Siapkan data primitif bersih sebelum dikirim ke background thread (Isolate)
   List _siapkanDataUntukIsolate(List dataLog) {
     return dataLog.map((item) {
       double vSuhu = double.tryParse(item['suhu']?.toString() ?? '0') ?? 0.0;
@@ -187,7 +175,6 @@ class RiwayatController extends GetxController {
     }).toList();
   }
 
-  // --- 2. PROSES EKSPOR DATA (PDF / EXCEL) ---
   Future<void> prosesEksporData({required bool isExcel}) async {
     DateTime dtMulai = DateTime(
       tanggalPilihan.value.year,
@@ -213,8 +200,8 @@ class RiwayatController extends GetxController {
     Duration selisihWaktu = dtSelesai.difference(dtMulai);
     if (selisihWaktu.inHours > 24) {
       Get.snackbar(
-        "Gagal Ekspor",
-        "Rentang waktu dipilih ${selisihWaktu.inHours} jam. Maksimal penarikan data adalah 24 jam!",
+        "Export Failed",
+        "Selected time range is ${selisihWaktu.inHours} hours. Maximum data export limit is 24 hours!",
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
@@ -223,8 +210,8 @@ class RiwayatController extends GetxController {
 
     if (riwayatData.isEmpty) {
       Get.snackbar(
-        "Data Kosong",
-        "Tidak ada data riwayat yang dapat diekspor pada rentang jam pilihan Anda.",
+        "Empty Data",
+        "No history data available to export within your selected time range.",
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
@@ -241,8 +228,8 @@ class RiwayatController extends GetxController {
       }
     } catch (e) {
       Get.snackbar(
-        "Error Ekspor",
-        "Gagal membuat file: $e",
+        "Export Error",
+        "Failed to generate file: $e",
         backgroundColor: Colors.black,
         colorText: Colors.white,
       );
@@ -251,7 +238,6 @@ class RiwayatController extends GetxController {
     }
   }
 
-  // --- GENERATE EXCEL + TAMPILKAN PRATINJAU DI DALAM APLIKASI ---
   Future<void> _generateExcel(String parameter, List dataLog) async {
     DateTime waktuEkspor = DateTime.now();
     String waktuEksporRapi = DateFormat('dd MMMM yyyy, HH:mm:ss').format(waktuEkspor);
@@ -266,7 +252,7 @@ class RiwayatController extends GetxController {
     };
 
     final List<int>? fileBytes = await compute(_buildExcelIsolate, payload);
-    if (fileBytes == null) throw Exception("Gagal membuat file Excel");
+    if (fileBytes == null) throw Exception("Failed to generate Excel file");
 
     String timestampFile = DateFormat('yyyyMMdd_HHmmss').format(waktuEkspor);
 
@@ -275,12 +261,11 @@ class RiwayatController extends GetxController {
     _tampilkanPreviewExcel(
       dataLog: preparedData,
       fileBytes: fileBytes,
-      fileName: "GrowSense_LogHP_$timestampFile.xlsx",
+      fileName: "GrowSense_PhoneLog_$timestampFile.xlsx",
       waktuEksporRapi: waktuEksporRapi,
     );
   }
 
-  // --- TAMPILAN PRATINJAU EXCEL DI DALAM APLIKASI ---
   void _tampilkanPreviewExcel({
     required List dataLog,
     required List<int> fileBytes,
@@ -292,11 +277,11 @@ class RiwayatController extends GetxController {
         appBar: AppBar(
           backgroundColor: const Color(0xFF2E6B3E),
           foregroundColor: Colors.white,
-          title: const Text("Pratinjau Data Excel", style: TextStyle(fontSize: 16)),
+          title: const Text("Excel Data Preview", style: TextStyle(fontSize: 16)),
           actions: [
             TextButton.icon(
               icon: const Icon(Icons.download, color: Colors.white, size: 20),
-              label: const Text("Simpan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: const Text("Save", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               onPressed: () async {
                 try {
                   Directory targetDir = Directory('/storage/emulated/0/Download');
@@ -309,16 +294,16 @@ class RiwayatController extends GetxController {
                     ..writeAsBytesSync(fileBytes);
 
                   Get.snackbar(
-                    "Berhasil Disimpan",
-                    "File tersimpan di folder Download: $fileName",
+                    "Saved Successfully",
+                    "File saved in Download folder: $fileName",
                     backgroundColor: Colors.green,
                     colorText: Colors.white,
                     duration: const Duration(seconds: 4),
                   );
                 } catch (e) {
                   Get.snackbar(
-                    "Gagal Menyimpan",
-                    "Terjadi kendala saat menyimpan file: $e",
+                    "Save Failed",
+                    "An error occurred while saving file: $e",
                     backgroundColor: Colors.redAccent,
                     colorText: Colors.white,
                   );
@@ -338,12 +323,12 @@ class RiwayatController extends GetxController {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Fase: ${namaFaseAktif.value} (${nutrisiMinAktif.value.toInt()} - ${nutrisiMaxAktif.value.toInt()} PPM)",
+                    "Phase: ${namaFaseAktif.value} (${nutrisiMinAktif.value.toInt()} - ${nutrisiMaxAktif.value.toInt()} PPM)",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.green.shade900),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Total: ${dataLog.length} baris | Diekspor: $waktuEksporRapi",
+                    "Total: ${dataLog.length} rows | Exported: $waktuEksporRapi",
                     style: const TextStyle(fontSize: 11, color: Colors.black54),
                   ),
                 ],
@@ -362,11 +347,11 @@ class RiwayatController extends GetxController {
                         child: const Row(
                           children: [
                             SizedBox(width: 40, child: Text("No", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
-                            SizedBox(width: 155, child: Text("Waktu (WIB)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
-                            SizedBox(width: 95, child: Text("Suhu (°C)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
-                            SizedBox(width: 105, child: Text("Lembap (%)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
-                            SizedBox(width: 115, child: Text("Nutrisi (PPM)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
-                            SizedBox(width: 90, child: Text("pH Air", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                            SizedBox(width: 155, child: Text("Time (WIB)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                            SizedBox(width: 95, child: Text("Temp (°C)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                            SizedBox(width: 105, child: Text("Humidity (%)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                            SizedBox(width: 115, child: Text("Nutrient (PPM)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                            SizedBox(width: 90, child: Text("Water pH", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
                           ],
                         ),
                       ),
@@ -438,7 +423,6 @@ class RiwayatController extends GetxController {
     );
   }
 
-  // --- GENERATE PDF (DI JALUR LATAR BELAKANG) ---
   Future<void> _generatePdf(String parameter, List dataLog) async {
     DateTime waktuEkspor = DateTime.now();
     String waktuEksporRapi = DateFormat('dd MMMM yyyy, HH:mm:ss').format(waktuEkspor);
@@ -464,12 +448,12 @@ class RiwayatController extends GetxController {
 }
 
 // ============================================================================
-// FUNGSI TOP-LEVEL DI LUAR CLASS UNTUK PROSES BACKGROUND (ISOLATE)
+// TOP-LEVEL FUNCTIONS FOR BACKGROUND PROCESSING (ISOLATE)
 // ============================================================================
 
 Future<List<int>?> _buildExcelIsolate(Map<String, dynamic> payload) async {
   var excel = Excel.createExcel();
-  Sheet sheetObject = excel['Laporan Penerimaan HP'];
+  Sheet sheetObject = excel['Phone Reception Log'];
 
   final String waktuEksporRapi = payload['waktuEksporRapi'];
   final String namaFase = payload['namaFase'];
@@ -477,20 +461,20 @@ Future<List<int>?> _buildExcelIsolate(Map<String, dynamic> payload) async {
   final int nutrisiMax = payload['nutrisiMax'];
   final List dataLog = payload['dataLog'];
 
-  sheetObject.appendRow([TextCellValue('GROWSENSE - LOG PENERIMAAN APLIKASI HP')]);
-  sheetObject.appendRow([TextCellValue('Diekspor pada: $waktuEksporRapi')]);
-  sheetObject.appendRow([TextCellValue('Fase Aktif: $namaFase (Target Nutrisi: $nutrisiMin - $nutrisiMax PPM)')]);
-  sheetObject.appendRow([TextCellValue('Keterangan: Teks Merah = Nilai di luar ambang batas ideal')]);
+  sheetObject.appendRow([TextCellValue('GROWSENSE - MOBILE APP RECEPTION LOG')]);
+  sheetObject.appendRow([TextCellValue('Exported on: $waktuEksporRapi')]);
+  sheetObject.appendRow([TextCellValue('Active Phase: $namaFase (Target Nutrient: $nutrisiMin - $nutrisiMax PPM)')]);
+  sheetObject.appendRow([TextCellValue('Note: Red text indicates values outside the ideal threshold')]);
   sheetObject.appendRow([TextCellValue('')]);
 
   sheetObject.appendRow([
     TextCellValue('No'),
-    TextCellValue('Waktu Diterima HP (WIB)'),
+    TextCellValue('Received Time (WIB)'),
     TextCellValue('Timestamp (ms)'),
-    TextCellValue('Suhu (°C)'),
-    TextCellValue('Kelembapan (%)'),
-    TextCellValue('Nutrisi (PPM)'),
-    TextCellValue('pH Air'),
+    TextCellValue('Temperature (°C)'),
+    TextCellValue('Humidity (%)'),
+    TextCellValue('Nutrient (PPM)'),
+    TextCellValue('Water pH'),
   ]);
 
   CellStyle redTextStyle = CellStyle(
@@ -589,11 +573,11 @@ Future<Uint8List> _buildPdfIsolate(Map<String, dynamic> payload) async {
             decoration: const pw.BoxDecoration(color: PdfColors.grey300),
             children: [
               headerCell('No'),
-              headerCell('Waktu Pengukuran'),
-              headerCell('Suhu (°C)'),
-              headerCell('Lembap (%)'),
-              headerCell('pH Air'),
-              headerCell('Nutrisi (PPM)'),
+              headerCell('Measurement Time'),
+              headerCell('Temp (°C)'),
+              headerCell('Humidity (%)'),
+              headerCell('Water pH'),
+              headerCell('Nutrient (PPM)'),
             ],
           ),
           ...List.generate(subData.length, (j) {
@@ -630,16 +614,16 @@ Future<Uint8List> _buildPdfIsolate(Map<String, dynamic> payload) async {
         return [
           pw.Text("GROWSENSE SMART GREENHOUSE",
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.Text("Laporan Riwayat Rangkuman Data Sensor (Total: ${dataLog.length} data)",
+          pw.Text("Sensor Data History Summary Report (Total: ${dataLog.length} records)",
               style: const pw.TextStyle(fontSize: 10.5)),
-          pw.Text("Diekspor pada: $waktuEksporRapi",
+          pw.Text("Exported on: $waktuEksporRapi",
               style: pw.TextStyle(
                   fontSize: 9.5,
                   color: PdfColors.grey700,
                   fontStyle: pw.FontStyle.italic)),
           pw.SizedBox(height: 4),
           pw.Text(
-            "Fase Aktif: $namaFase (Target Nutrisi: $nutrisiMin - $nutrisiMax PPM)",
+            "Active Phase: $namaFase (Target Nutrient: $nutrisiMin - $nutrisiMax PPM)",
             style: pw.TextStyle(
                 fontSize: 9.5,
                 fontWeight: pw.FontWeight.bold,
@@ -647,7 +631,7 @@ Future<Uint8List> _buildPdfIsolate(Map<String, dynamic> payload) async {
           ),
           pw.SizedBox(height: 4),
           pw.Text(
-            "Keterangan: Teks berwarna merah tebal menandakan nilai di luar ambang batas ideal.",
+            "Note: Bold red text indicates values outside the ideal threshold.",
             style: pw.TextStyle(
               fontSize: 8.5,
               fontStyle: pw.FontStyle.italic,

@@ -20,16 +20,13 @@ class LoginController extends GetxController {
     checkSession();
   }
 
-  // --- FUNGSI AUTO LOGIN ---
   void checkSession() {
     _auth.authStateChanges().listen((User? user) {
       if (user != null) {
-        // Jika user ADA dan route saat ini masih di halaman Login, pindah ke Home
         if (Get.currentRoute == Routes.LOGIN) {
           Get.offAllNamed(Routes.HOME);
         }
       } else {
-        // Jika user NULL dan route saat ini bukan di halaman Login, paksa ke Login
         if (Get.currentRoute != Routes.LOGIN) {
           Get.offAllNamed(Routes.LOGIN);
         }
@@ -37,7 +34,6 @@ class LoginController extends GetxController {
     });
   }
 
-  // --- FUNGSI LOGOUT ---
   Future<void> logout() async {
     try {
       isLoading.value = true;
@@ -45,7 +41,7 @@ class LoginController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Gagal keluar dari akun',
+        'Failed to log out from account',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
@@ -59,16 +55,14 @@ class LoginController extends GetxController {
     isObscure.value = !isObscure.value;
   }
 
- // --- FUNGSI UTAMA LOGIN ---
   Future<void> login() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
-    // 🔴 1. VALIDASI INPUT KOSONG SECARA SPESIFIK
     if (email.isEmpty && password.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Email dan Password tidak boleh kosong!',
+        'Warning',
+        'Email and Password cannot be empty!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -76,8 +70,8 @@ class LoginController extends GetxController {
       return;
     } else if (email.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Email tidak boleh kosong!',
+        'Warning',
+        'Email cannot be empty!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -85,8 +79,8 @@ class LoginController extends GetxController {
       return;
     } else if (password.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Password tidak boleh kosong!',
+        'Warning',
+        'Password cannot be empty!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -97,7 +91,6 @@ class LoginController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 🔍 2. CEK EMAIL TERLEBIH DAHULU DI FIRESTORE
       var checkUser = await _firestore
           .collection('users')
           .where('email', isEqualTo: email)
@@ -105,8 +98,8 @@ class LoginController extends GetxController {
 
       if (checkUser.docs.isEmpty) {
         Get.snackbar(
-          'Gagal Login',
-          'Akun dengan email ini belum terdaftar.',
+          'Login Failed',
+          'No account is registered with this email.',
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
@@ -115,7 +108,6 @@ class LoginController extends GetxController {
         return;
       }
 
-      // 🔐 3. JIKA EMAIL TERDAFTAR, LANJUTKAN PROSES AUTENTIKASI
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -126,15 +118,15 @@ class LoginController extends GetxController {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(uid).get();
 
-      String namaUser = "Pengguna";
+      String namaUser = "User";
       if (userDoc.exists && userDoc.data() != null) {
         var data = userDoc.data() as Map<String, dynamic>;
-        namaUser = data['nama'] ?? "Pengguna";
+        namaUser = data['nama'] ?? "User";
       }
 
       Get.snackbar(
-        'Login Berhasil',
-        'Selamat datang kembali, $namaUser!',
+        'Login Successful',
+        'Welcome back, $namaUser!',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
@@ -143,21 +135,20 @@ class LoginController extends GetxController {
       Get.offAllNamed(Routes.HOME);
 
     } on FirebaseAuthException catch (e) {
-      String pesanError = 'Terjadi kesalahan saat login.';
+      String pesanError = 'An error occurred during login.';
 
-      
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        pesanError = 'Password yang Anda masukkan salah.';
+        pesanError = 'The password you entered is incorrect.';
       } else if (e.code == 'user-not-found') {
-        pesanError = 'Akun dengan email ini belum terdaftar.';
+        pesanError = 'No account is registered with this email.';
       } else if (e.code == 'invalid-email') {
-        pesanError = 'Format email tidak valid.';
+        pesanError = 'Invalid email format.';
       } else if (e.code == 'too-many-requests') {
-        pesanError = 'Terdapat terlalu banyak percobaan gagal. Coba lagi nanti.';
+        pesanError = 'Too many failed attempts. Please try again later.';
       }
 
       Get.snackbar(
-        'Gagal Login',
+        'Login Failed',
         pesanError,
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.redAccent,

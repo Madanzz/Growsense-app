@@ -31,12 +31,12 @@ class RiwayatView extends GetView<RiwayatController> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
-                      // Pilih Tanggal
+                      // Select Date
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Tanggal Filter:",
+                            "Filter Date:",
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Obx(() => TextButton.icon(
@@ -63,14 +63,14 @@ class RiwayatView extends GetView<RiwayatController> {
                       ),
                       const Divider(),
 
-                      // Pilih Jam Mulai & Jam Selesai
+                      // Select Start & End Time
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Mulai:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text("Start:", style: TextStyle(fontSize: 12, color: Colors.grey)),
                               Obx(() => TextButton(
                                     child: Text(
                                       controller.jamMulai.value.format(context),
@@ -92,7 +92,7 @@ class RiwayatView extends GetView<RiwayatController> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Selesai:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text("End:", style: TextStyle(fontSize: 12, color: Colors.grey)),
                               Obx(() => TextButton(
                                     child: Text(
                                       controller.jamSelesai.value.format(context),
@@ -120,19 +120,19 @@ class RiwayatView extends GetView<RiwayatController> {
                               ),
                             ),
                             onPressed: () => controller.muatDataRiwayat(),
-                            child: const Text("Cari", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text("Search", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
 
-                      // Tombol Ekspor Data
+                      // Export Buttons
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                              label: const Text("Cetak PDF"),
+                              label: const Text("Print PDF"),
                               onPressed: () => controller.prosesEksporData(isExcel: false),
                             ),
                           ),
@@ -140,7 +140,7 @@ class RiwayatView extends GetView<RiwayatController> {
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.table_chart, color: Colors.green),
-                              label: const Text("Ekspor Excel"),
+                              label: const Text("Export Excel"),
                               onPressed: () => controller.prosesEksporData(isExcel: true),
                             ),
                           ),
@@ -152,7 +152,7 @@ class RiwayatView extends GetView<RiwayatController> {
               ),
             ),
 
-            // --- 🟢 KETERANGAN LEGENDA FASE & AMBANG BATAS DINAMIS 🟢 ---
+            // --- PHASE & DYNAMIC THRESHOLD LEGEND ---
             Padding(
               padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 8.0),
               child: Column(
@@ -172,7 +172,7 @@ class RiwayatView extends GetView<RiwayatController> {
                         Icon(Icons.info_outline, size: 14, color: Colors.green.shade800),
                         const SizedBox(width: 6),
                         Text(
-                          "Fase: ${controller.namaFaseAktif.value} (${controller.nutrisiMinAktif.value.toInt()} - ${controller.nutrisiMaxAktif.value.toInt()} PPM)",
+                          "Phase: ${controller.namaFaseAktif.value} (${controller.nutrisiMinAktif.value.toInt()} - ${controller.nutrisiMaxAktif.value.toInt()} PPM)",
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -195,7 +195,7 @@ class RiwayatView extends GetView<RiwayatController> {
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
-                          "Keterangan: Teks berwarna merah menandakan nilai di luar ambang batas ideal.",
+                          "Note: Red text indicates values outside the ideal threshold.",
                           style: TextStyle(
                             fontSize: 11,
                             fontStyle: FontStyle.italic,
@@ -209,7 +209,7 @@ class RiwayatView extends GetView<RiwayatController> {
               ),
             ),
 
-            // --- LIST DATA RIWAYAT ---
+            // --- HISTORY DATA LIST ---
             Obx(() {
               if (controller.isLoading.value) {
                 return const Padding(
@@ -222,7 +222,7 @@ class RiwayatView extends GetView<RiwayatController> {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40.0),
                   child: Center(
-                    child: Text("Data riwayat tidak ditemukan pada rentang waktu ini."),
+                    child: Text("No history data found for this time range."),
                   ),
                 );
               }
@@ -245,13 +245,12 @@ class RiwayatView extends GetView<RiwayatController> {
                   bool isLembapAbnormal = vLembap < 60.0 || vLembap > 75.0;
                   bool isPhAbnormal = vPh < 5.8 || vPh > 6.3;
 
-                  // 🔴 PENGECEKAN DINAMIS (TANPA OBX TAMBAHAN DI DALAM LISTITEM) 🔴
                   bool isNutrisiAbnormal = controller.isNutrisiAbnormal(vNutrisi);
 
                   return ListTile(
                     dense: true,
                     title: Text(
-                      "Waktu: ${item['waktu'] ?? '-'}",
+                      "Time: ${item['waktu'] ?? '-'}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Padding(
@@ -259,7 +258,7 @@ class RiwayatView extends GetView<RiwayatController> {
                       child: Text.rich(
                         TextSpan(
                           children: [
-                            const TextSpan(text: "Suhu: "),
+                            const TextSpan(text: "Temp: "),
                             TextSpan(
                               text: "${item['suhu']}°C",
                               style: TextStyle(
@@ -267,7 +266,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                 fontWeight: isSuhuAbnormal ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                            const TextSpan(text: " | Lembap: "),
+                            const TextSpan(text: " | Humidity: "),
                             TextSpan(
                               text: "${item['kelembapan']}%",
                               style: TextStyle(
@@ -283,7 +282,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                 fontWeight: isPhAbnormal ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                            const TextSpan(text: " | Nutrisi: "),
+                            const TextSpan(text: " | Nutrient: "),
                             TextSpan(
                               text: "${item['nutrisi']} PPM",
                               style: TextStyle(

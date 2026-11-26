@@ -40,7 +40,7 @@ class GrafikView extends GetView<GrafikController> {
                 const SizedBox(height: 12),
                 _buildDatePicker(context),
                 const SizedBox(height: 12),
-                _buildCombinedChart(),
+                _ZoomableCombinedChart(controller: controller),
                 const SizedBox(height: 24),
               ],
             ),
@@ -51,7 +51,7 @@ class GrafikView extends GetView<GrafikController> {
   }
 
   Widget _buildRangeSelector() {
-    List<String> ranges = ['1 Hari', '7 Hari', '15 Hari', '1 Bulan'];
+    List<String> ranges = ['1 Day', '7 Days', '15 Days', '1 Month'];
     return Obx(() {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -101,7 +101,7 @@ class GrafikView extends GetView<GrafikController> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Obx(() {
-            bool isBulanMode = controller.selectedRange.value == '1 Bulan';
+            bool isBulanMode = controller.selectedRange.value == '1 Month';
             String formattedDate = isBulanMode
                 ? DateFormat('MMMM yyyy').format(controller.selectedDate.value).toUpperCase()
                 : DateFormat('dd MMMM yyyy').format(controller.selectedDate.value).toUpperCase();
@@ -113,7 +113,7 @@ class GrafikView extends GetView<GrafikController> {
           }),
           InkWell(
             onTap: () async {
-              bool isBulanMode = controller.selectedRange.value == '1 Bulan';
+              bool isBulanMode = controller.selectedRange.value == '1 Month';
 
               if (isBulanMode) {
                 showDialog(
@@ -121,7 +121,7 @@ class GrafikView extends GetView<GrafikController> {
                   builder: (BuildContext context) {
                     DateTime tempDate = controller.selectedDate.value;
                     return AlertDialog(
-                      title: const Text("Pilih Bulan & Tahun", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      title: const Text("Select Month & Year", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       content: SizedBox(
                         height: 250,
                         width: 300,
@@ -135,7 +135,7 @@ class GrafikView extends GetView<GrafikController> {
                               context: context,
                               builder: (context) {
                                 return SimpleDialog(
-                                  title: Text("Pilih Bulan - ${dateTime.year}"),
+                                  title: Text("Select Month - ${dateTime.year}"),
                                   children: List.generate(12, (index) {
                                     String monthName = DateFormat('MMMM').format(DateTime(2024, index + 1));
                                     return SimpleDialogOption(
@@ -174,8 +174,58 @@ class GrafikView extends GetView<GrafikController> {
       ),
     );
   }
+}
 
-  Widget _buildCombinedChart() {
+class _ZoomableCombinedChart extends StatefulWidget {
+  final GrafikController controller;
+
+  const _ZoomableCombinedChart({required this.controller});
+
+  @override
+  State<_ZoomableCombinedChart> createState() => _ZoomableCombinedChartState();
+}
+
+class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
+  final TransformationController _transformController = TransformationController();
+  double _currentScale = 1.0;
+
+  @override
+  void dispose() {
+    _transformController.dispose();
+    super.dispose();
+  }
+
+  void _zoomIn() {
+    setState(() {
+      _currentScale = (_currentScale + 0.5).clamp(1.0, 4.0);
+      _transformController.value = Matrix4.identity()
+        ..scaleByDouble(_currentScale, _currentScale, 1.0, 1.0);
+    });
+  }
+
+  void _zoomOut() {
+    setState(() {
+      _currentScale = (_currentScale - 0.5).clamp(1.0, 4.0);
+      if (_currentScale == 1.0) {
+        _transformController.value = Matrix4.identity();
+      } else {
+        _transformController.value = Matrix4.identity()
+          ..scaleByDouble(_currentScale, _currentScale, 1.0, 1.0);
+      }
+    });
+  }
+
+  void _resetZoom() {
+    setState(() {
+      _currentScale = 1.0;
+      _transformController.value = Matrix4.identity();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -186,10 +236,59 @@ class GrafikView extends GetView<GrafikController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Obx(() => Text(
-            "Tren Parameter (${controller.selectedRange.value})",
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
-          )),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Obx(() => Text(
+                  "Parameter Trend (${controller.selectedRange.value})",
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                )),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.black12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildZoomButton(
+                      icon: Icons.zoom_out_rounded,
+                      onTap: _currentScale > 1.0 ? _zoomOut : null,
+                    ),
+                    InkWell(
+                      onTap: _currentScale > 1.0 ? _resetZoom : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                        child: Text(
+                          "${_currentScale.toStringAsFixed(1)}x",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: _currentScale > 1.0 ? const Color(0xFF2E7D32) : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildZoomButton(
+                      icon: Icons.zoom_in_rounded,
+                      onTap: _currentScale < 4.0 ? _zoomIn : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (_currentScale > 1.0)
+            const Padding(
+              padding: EdgeInsets.only(top: 4.0),
+              child: Text(
+                "Drag chart with 1 finger • Tap scale value to reset",
+                style: TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontStyle: FontStyle.italic),
+              ),
+            ),
           const SizedBox(height: 12),
 
           _buildLegendChips(),
@@ -203,10 +302,10 @@ class GrafikView extends GetView<GrafikController> {
 
             String range = controller.selectedRange.value;
             int maxPoints = 30;
-            if (range == '1 Hari') maxPoints = 24;
-            if (range == '7 Hari') maxPoints = 7;
-            if (range == '15 Hari') maxPoints = 15;
-            if (range == '1 Bulan') {
+            if (range == '1 Day') maxPoints = 24;
+            if (range == '7 Days') maxPoints = 7;
+            if (range == '15 Days') maxPoints = 15;
+            if (range == '1 Month') {
               maxPoints = DateTime(controller.selectedDate.value.year, controller.selectedDate.value.month + 1, 0).day;
             }
 
@@ -214,21 +313,20 @@ class GrafikView extends GetView<GrafikController> {
             List<double> allActiveValues = [];
 
             if (showSuhu) {
-              activeLineBars.add(_buildRawLineBarData(controller.suhuSpots, colorSuhu, maxPoints));
+              activeLineBars.add(_buildRawLineBarData(controller.suhuSpots, GrafikView.colorSuhu, maxPoints));
               allActiveValues.addAll(controller.suhuSpots.where((v) => v > 0));
             }
             if (showLembap) {
-              activeLineBars.add(_buildRawLineBarData(controller.lembapSpots, colorLembap, maxPoints));
+              activeLineBars.add(_buildRawLineBarData(controller.lembapSpots, GrafikView.colorLembap, maxPoints));
               allActiveValues.addAll(controller.lembapSpots.where((v) => v > 0));
             }
             if (showNutrisi) {
-              // Skala 10^2 (dibagi 100) agar proporsional dengan parameter lain di grafik
               List<double> scaledNutrisi = controller.nutrisiSpots.map((v) => v / 100.0).toList();
-              activeLineBars.add(_buildRawLineBarData(scaledNutrisi, colorNutrisi, maxPoints));
+              activeLineBars.add(_buildRawLineBarData(scaledNutrisi, GrafikView.colorNutrisi, maxPoints));
               allActiveValues.addAll(scaledNutrisi.where((v) => v > 0));
             }
             if (showPh) {
-              activeLineBars.add(_buildRawLineBarData(controller.phSpots, colorPh, maxPoints));
+              activeLineBars.add(_buildRawLineBarData(controller.phSpots, GrafikView.colorPh, maxPoints));
               allActiveValues.addAll(controller.phSpots.where((v) => v > 0));
             }
 
@@ -244,113 +342,129 @@ class GrafikView extends GetView<GrafikController> {
                 SizedBox(
                   height: 260,
                   child: activeLineBars.isEmpty
-                      ? const Center(child: Text("Semua garis disembunyikan.", style: TextStyle(color: Colors.grey)))
-                      : LineChart(
-                          LineChartData(
-                            minX: 1,
-                            maxX: maxPoints.toDouble(),
-                            minY: 0,
-                            maxY: calculatedMaxY,
-                            gridData: FlGridData(
-                              show: true,
-                              drawVerticalLine: false,
-                              getDrawingHorizontalLine: (val) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                            ),
-                            borderData: FlBorderData(
-                              show: true,
-                              border: const Border(
-                                bottom: BorderSide(color: Colors.black26),
-                                left: BorderSide(color: Colors.black26),
-                              ),
-                            ),
-                            titlesData: FlTitlesData(
-                              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 42,
-                                  interval: calculatedMaxY / 5,
-                                  getTitlesWidget: (val, meta) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 6.0),
-                                      child: Text(
-                                        val >= 100 ? "${val.toInt()}" : val.toStringAsFixed(1),
-                                        style: const TextStyle(fontSize: 10, color: Colors.black45),
+                      ? const Center(child: Text("All lines are hidden.", style: TextStyle(color: Colors.grey)))
+                      : ClipRect(
+                          child: InteractiveViewer(
+                            transformationController: _transformController,
+                            minScale: 1.0,
+                            maxScale: 4.0,
+                            panEnabled: _currentScale > 1.0,
+                            scaleEnabled: false,
+                            onInteractionEnd: (_) {
+                              setState(() {
+                                _currentScale = _transformController.value.getMaxScaleOnAxis();
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+                              child: LineChart(
+                                LineChartData(
+                                  minX: 1,
+                                  maxX: maxPoints.toDouble(),
+                                  minY: 0,
+                                  maxY: calculatedMaxY,
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawVerticalLine: false,
+                                    getDrawingHorizontalLine: (val) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                                  ),
+                                  borderData: FlBorderData(
+                                    show: true,
+                                    border: const Border(
+                                      bottom: BorderSide(color: Colors.black26),
+                                      left: BorderSide(color: Colors.black26),
+                                    ),
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 42,
+                                        interval: calculatedMaxY / 5,
+                                        getTitlesWidget: (val, meta) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(right: 6.0),
+                                            child: Text(
+                                              val >= 100 ? "${val.toInt()}" : val.toStringAsFixed(1),
+                                              style: const TextStyle(fontSize: 10, color: Colors.black45),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 1,
-                                  reservedSize: 24,
-                                  getTitlesWidget: (val, meta) {
-                                    int spotIdx = val.toInt();
-                                    bool shouldShowLabel = false;
+                                    ),
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        interval: 1,
+                                        reservedSize: 24,
+                                        getTitlesWidget: (val, meta) {
+                                          int spotIdx = val.toInt();
+                                          bool shouldShowLabel = false;
 
-                                    if (range == '1 Hari') {
-                                      shouldShowLabel = (spotIdx == 1 || spotIdx == 6 || spotIdx == 12 || spotIdx == 18 || spotIdx == 24);
-                                    } else if (range == '7 Hari') {
-                                      shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 5 || spotIdx == 7);
-                                    } else if (range == '15 Hari') {
-                                      shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 6 || spotIdx == 9 || spotIdx == 12 || spotIdx == 15);
-                                    } else {
-                                      shouldShowLabel = (spotIdx == 1 || spotIdx == 5 || spotIdx == 10 || spotIdx == 15 || spotIdx == 20 || spotIdx == 25 || spotIdx == 30);
-                                    }
+                                          if (range == '1 Day') {
+                                            shouldShowLabel = (spotIdx == 1 || spotIdx == 6 || spotIdx == 12 || spotIdx == 18 || spotIdx == 24);
+                                          } else if (range == '7 Days') {
+                                            shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 5 || spotIdx == 7);
+                                          } else if (range == '15 Days') {
+                                            shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 6 || spotIdx == 9 || spotIdx == 12 || spotIdx == 15);
+                                          } else {
+                                            shouldShowLabel = (spotIdx == 1 || spotIdx == 5 || spotIdx == 10 || spotIdx == 15 || spotIdx == 20 || spotIdx == 25 || spotIdx == 30);
+                                          }
 
-                                    if (shouldShowLabel) {
-                                      String txt = range == '1 Bulan' ? "$spotIdx" : (controller.dateLabelsX[spotIdx] ?? "$spotIdx");
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 6.0),
-                                        child: Text(
-                                          txt,
-                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87),
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
+                                          if (shouldShowLabel) {
+                                            String txt = range == '1 Month' ? "$spotIdx" : (controller.dateLabelsX[spotIdx] ?? "$spotIdx");
+                                            return Padding(
+                                              padding: const EdgeInsets.only(top: 6.0),
+                                              child: Text(
+                                                txt,
+                                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87),
+                                              ),
+                                            );
+                                          }
+                                          return const SizedBox.shrink();
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  lineTouchData: LineTouchData(
+                                    enabled: true,
+                                    handleBuiltInTouches: false,
+                                    touchSpotThreshold: 20,
+                                    touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+                                      if (event is FlTapUpEvent &&
+                                          touchResponse != null &&
+                                          touchResponse.lineBarSpots != null &&
+                                          touchResponse.lineBarSpots!.isNotEmpty) {
+                                        final touchedSpot = touchResponse.lineBarSpots!.first;
+                                        double selectedPoint = touchedSpot.x.roundToDouble();
+
+                                        if (controller.selectedHour.value == selectedPoint) {
+                                          controller.selectedHour.value = null;
+                                        } else {
+                                          controller.selectedHour.value = selectedPoint;
+                                        }
+                                      }
+                                    },
+                                    touchTooltipData: LineTouchTooltipData(getTooltipItems: (_) => []),
+                                  ),
+                                  lineBarsData: activeLineBars,
                                 ),
                               ),
                             ),
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              handleBuiltInTouches: false,
-                              touchSpotThreshold: 20,
-                              touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
-                                if (event is FlTapUpEvent &&
-                                    touchResponse != null &&
-                                    touchResponse.lineBarSpots != null &&
-                                    touchResponse.lineBarSpots!.isNotEmpty) {
-                                  final touchedSpot = touchResponse.lineBarSpots!.first;
-                                  double selectedPoint = touchedSpot.x.roundToDouble();
-
-                                  if (controller.selectedHour.value == selectedPoint) {
-                                    controller.selectedHour.value = null;
-                                  } else {
-                                    controller.selectedHour.value = selectedPoint;
-                                  }
-                                }
-                              },
-                              touchTooltipData: LineTouchTooltipData(getTooltipItems: (_) => []),
-                            ),
-                            lineBarsData: activeLineBars,
                           ),
                         ),
                 ),
 
-                // CARD HITAM RINCIAN PERSENSOR ON-TAP (MENAMPILKAN NILAI ASLI)
                 Obx(() {
                   double? selectedPoint = controller.selectedHour.value;
                   if (selectedPoint == null) return const SizedBox.shrink();
 
                   int pIdx = selectedPoint.toInt();
-                  String titleLabel = range == '1 Bulan'
-                      ? "Tanggal $pIdx ${DateFormat('MMMM yyyy').format(controller.selectedDate.value)}"
-                      : (controller.dateLabelsX[pIdx] ?? "Titik $pIdx");
+                  String titleLabel = range == '1 Month'
+                      ? "Day $pIdx ${DateFormat('MMMM yyyy').format(controller.selectedDate.value)}"
+                      : (controller.dateLabelsX[pIdx] ?? "Point $pIdx");
 
                   double vSuhu = (pIdx <= controller.suhuSpots.length) ? controller.suhuSpots[pIdx - 1] : 0.0;
                   double vLembap = (pIdx <= controller.lembapSpots.length) ? controller.lembapSpots[pIdx - 1] : 0.0;
@@ -383,15 +497,15 @@ class GrafikView extends GetView<GrafikController> {
                         ),
                         const Divider(color: Colors.white24, height: 12),
 
-                        if (showSuhu) _buildDetailRow("Suhu", "${vSuhu.toStringAsFixed(1)} °C", colorSuhu),
-                        if (showLembap) _buildDetailRow("Kelembapan", "${vLembap.toStringAsFixed(1)} %", colorLembap),
+                        if (showSuhu) _buildDetailRow("Temperature", "${vSuhu.toStringAsFixed(1)} °C", GrafikView.colorSuhu),
+                        if (showLembap) _buildDetailRow("Humidity", "${vLembap.toStringAsFixed(1)} %", GrafikView.colorLembap),
                         if (showNutrisi)
                           _buildDetailRow(
-                            "Nutrisi",
+                            "Nutrient",
                             "${vNutrisi.toStringAsFixed(1)} PPM (${(vNutrisi / 100).toStringAsFixed(2)} ×10²)",
-                            colorNutrisi,
+                            GrafikView.colorNutrisi,
                           ),
-                        if (showPh) _buildDetailRow("pH Air", vPh.toStringAsFixed(1), colorPh),
+                        if (showPh) _buildDetailRow("Water pH", vPh.toStringAsFixed(1), GrafikView.colorPh),
                       ],
                     ),
                   );
@@ -400,6 +514,22 @@ class GrafikView extends GetView<GrafikController> {
             );
           }),
         ],
+      ),
+    );
+  }
+
+  Widget _buildZoomButton({required IconData icon, required VoidCallback? onTap}) {
+    bool isEnabled = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Icon(
+          icon,
+          size: 18,
+          color: isEnabled ? const Color(0xFF2E7D32) : Colors.grey.shade400,
+        ),
       ),
     );
   }
@@ -434,7 +564,7 @@ class GrafikView extends GetView<GrafikController> {
       dotData: FlDotData(
         show: true,
         getDotPainter: (spot, percent, barData, index) {
-          bool isSelected = controller.selectedHour.value == spot.x;
+          bool isSelected = widget.controller.selectedHour.value == spot.x;
 
           return FlDotCirclePainter(
             radius: isSelected ? 6.0 : 3.5,
@@ -453,16 +583,17 @@ class GrafikView extends GetView<GrafikController> {
         spacing: 8,
         runSpacing: 6,
         children: [
-          _buildInteractiveChipItem("Suhu (°C)", 'Suhu', colorSuhu),
-          _buildInteractiveChipItem("Kelembapan (%)", 'Kelembapan', colorLembap),
-          _buildInteractiveChipItem("Nutrisi (×10² PPM)", 'Nutrisi', colorNutrisi),
-          _buildInteractiveChipItem("pH Air", 'pH Air', colorPh),
+          _buildInteractiveChipItem("Temperature (°C)", 'Suhu', GrafikView.colorSuhu),
+          _buildInteractiveChipItem("Humidity (%)", 'Kelembapan', GrafikView.colorLembap),
+          _buildInteractiveChipItem("Nutrient (×10² PPM)", 'Nutrisi', GrafikView.colorNutrisi),
+          _buildInteractiveChipItem("Water pH", 'pH Air', GrafikView.colorPh),
         ],
       );
     });
   }
 
   Widget _buildInteractiveChipItem(String label, String paramKey, Color color) {
+    final controller = widget.controller;
     bool isVisible = controller.paramVisibility[paramKey] ?? true;
 
     return InkWell(

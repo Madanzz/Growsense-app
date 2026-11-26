@@ -10,7 +10,7 @@ class RegisterView extends GetView<RegisterController> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Daftar Akun Baru'),
+        title: const Text('Create New Account'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -30,7 +30,7 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Buat Akun GrowSense',
+                  'Create GrowSense Account',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,
@@ -39,7 +39,7 @@ class RegisterView extends GetView<RegisterController> {
                   ),
                 ),
                 const Text(
-                  'Isi data di bawah untuk mendaftar',
+                  'Fill in the details below to register',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -48,13 +48,12 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 32),
 
-                // Field Nama Lengkap
                 TextField(
                   controller: controller.nameController,
                   keyboardType: TextInputType.name,
                   decoration: InputDecoration(
-                    labelText: 'Nama Lengkap',
-                    hintText: 'masukkan nama lengkap',
+                    labelText: 'Full Name',
+                    hintText: 'Enter your full name',
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -63,13 +62,12 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 16),
 
-                // Field Email
                 TextField(
                   controller: controller.emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'masukkan email aktif',
+                    hintText: 'Enter an active email',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -78,13 +76,12 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 16),
 
-                // Field Password
                 Obx(() => TextField(
                       controller: controller.passwordController,
                       obscureText: controller.isObscurePassword.value,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'minimal 6 karakter',
+                        hintText: 'Minimum 6 characters',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -101,13 +98,12 @@ class RegisterView extends GetView<RegisterController> {
                     )),
                 const SizedBox(height: 16),
 
-                // Field Konfirmasi Password
                 Obx(() => TextField(
                       controller: controller.confirmPasswordController,
                       obscureText: controller.isObscureConfirmPassword.value,
                       decoration: InputDecoration(
-                        labelText: 'Konfirmasi Password',
-                        hintText: 'ulangi password',
+                        labelText: 'Confirm Password',
+                        hintText: 'Re-enter password',
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -124,7 +120,6 @@ class RegisterView extends GetView<RegisterController> {
                     )),
                 const SizedBox(height: 24),
 
-                // Tombol Daftar
                 Obx(() => SizedBox(
                       height: 50,
                       child: ElevatedButton(
@@ -148,7 +143,7 @@ class RegisterView extends GetView<RegisterController> {
                                 ),
                               )
                             : const Text(
-                                'DAFTAR',
+                                'REGISTER',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -158,17 +153,16 @@ class RegisterView extends GetView<RegisterController> {
                     )),
                 const SizedBox(height: 16),
 
-                // Kembali ke Login
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Sudah punya akun? "),
+                    const Text("Already have an account? "),
                     GestureDetector(
                       onTap: () {
                         Get.back();
                       },
                       child: const Text(
-                        'Masuk di sini',
+                        'Log in here',
                         style: TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
