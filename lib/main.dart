@@ -13,6 +13,7 @@ import 'firebase_options.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart'; 
 import 'app/modules/home/controllers/home_controller.dart';
+import 'app/translations/app_translations.dart';
 
 List<List<dynamic>> riwayatCSV = [
   ["Client Timestamp (Phone)", "Received At (Epoch)", "Firebase Timestamp", "Temperature (C)", "Humidity (%)", "Nutrient (PPM)", "pH"]
@@ -21,7 +22,7 @@ List<List<dynamic>> riwayatCSV = [
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (kDebugMode) {
-    debugPrint("🔔 [BACKGROUND] Critical alert: ${message.notification?.title}");
+    debugPrint(" [BACKGROUND] Critical alert: ${message.notification?.title}");
   }
 }
 
@@ -43,6 +44,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  await initializeDateFormatting('id_ID', null);
   await initializeDateFormatting('en_US', null);
 
   pantauDataSensorTanpaUI();
@@ -67,7 +69,7 @@ void main() async {
   await messaging.subscribeToTopic('growsense_peringatan');
 
   if (kDebugMode) {
-    debugPrint("✅ App successfully subscribed to growsense_peringatan channel!");
+    debugPrint(" App successfully subscribed to growsense_peringatan channel!");
   }
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -120,6 +122,9 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'GrowSense',
       debugShowCheckedModeBanner: false,
+      translations: AppTranslations(),
+      locale: const Locale('id', 'ID'), // Default Bahasa Indonesia (bisa diubah ke en_US)
+      fallbackLocale: const Locale('en', 'US'),
       initialRoute: AppPages.initial, 
       getPages: AppPages.routes,      
     );
@@ -178,7 +183,7 @@ void pantauDataSensorTanpaUI() {
         await file.writeAsString("$csvBarisBaru\n", mode: FileMode.append);
 
       } catch (e) {
-        if (kDebugMode) debugPrint("❌ Failed to save local CSV: $e");
+        if (kDebugMode) debugPrint(" Failed to save local CSV: $e");
       }
     }
   });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../widgets/main_layout.dart';
 
 class ChiliGuideView extends StatefulWidget {
@@ -32,7 +33,6 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
         color: const Color(0xFFEFF3EA),
         child: Column(
           children: [
-            // WHITE HEADER BANNER
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -50,9 +50,9 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Chili Cultivation Guide",
-                    style: TextStyle(
+                  Text(
+                    'guide_title'.tr,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -60,7 +60,7 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Sensor parameter targets, growth phases, & troubleshooting.",
+                    'guide_subtitle'.tr,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
@@ -70,7 +70,6 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
               ),
             ),
 
-            // INTERNAL NAVIGATION TAB BAR
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               height: 40,
@@ -91,15 +90,14 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
                 labelColor: const Color(0xFF2E4F32),
                 unselectedLabelColor: Colors.grey,
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                tabs: const [
-                  Tab(text: "Sensor Targets"),
-                  Tab(text: "Growth Phases"),
-                  Tab(text: "Troubleshooting"),
+                tabs: [
+                  Tab(text: 'tab_sensor_target'.tr),
+                  Tab(text: 'tab_growth_phase'.tr),
+                  Tab(text: 'tab_troubleshooting'.tr),
                 ],
               ),
             ),
 
-            // TAB CONTENT
             Builder(
               builder: (context) {
                 switch (_tabController.index) {
@@ -121,53 +119,52 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
     );
   }
 
-  // TAB 1: SENSOR TARGETS
   Widget _buildTabTargetSensor() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _buildInfoCard(
-            title: "Water & Ambient Temperature",
+            title: 'guide_temp_title'.tr,
             imagePath: 'assets/images/thermometer.png',
-            child: const Column(
+            child: Column(
               children: [
-                _MetricRow(label: "Daily Ideal", value: "24°C - 28°C"),
-                _MetricRow(label: "Maximum Limit", value: "32°C (Flower drop)"),
-                _MetricRow(label: "Minimum Limit", value: "20°C (Slow growth)"),
+                _MetricRow(label: 'guide_temp_ideal_lbl'.tr, value: "24°C - 28°C"),
+                _MetricRow(label: 'guide_temp_max_lbl'.tr, value: 'guide_temp_max_val'.tr),
+                _MetricRow(label: 'guide_temp_min_lbl'.tr, value: 'guide_temp_min_val'.tr),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Air Humidity (RH)",
+            title: 'guide_hum_title'.tr,
             imagePath: 'assets/images/humidity.png',
-            child: const Column(
+            child: Column(
               children: [
-                _MetricRow(label: "Vegetative (Early)", value: "60% - 70%"),
-                _MetricRow(label: "Generative (Fruiting)", value: "50% - 60%"),
-                _MetricRow(label: "Note", value: ">70% Prone to fungus"),
+                _MetricRow(label: 'guide_hum_veg_lbl'.tr, value: "60% - 70%"),
+                _MetricRow(label: 'guide_hum_gen_lbl'.tr, value: "50% - 60%"),
+                _MetricRow(label: 'guide_hum_note_lbl'.tr, value: 'guide_hum_note_val'.tr),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Nutrient Level (PPM)",
+            title: 'guide_nut_title'.tr,
             imagePath: 'assets/images/nutrition.png',
-            child: const Column(
+            child: Column(
               children: [
-                _MetricRow(label: "Seedling", value: "300 - 500 ppm"),
-                _MetricRow(label: "Vegetative Phase", value: "800 - 1,200 ppm"),
-                _MetricRow(label: "Flowering Phase", value: "1,500 - 2,100 ppm"),
+                _MetricRow(label: 'guide_nut_seed_lbl'.tr, value: "300 - 500 ppm"),
+                _MetricRow(label: 'guide_nut_veg_lbl'.tr, value: "800 - 1.200 ppm"),
+                _MetricRow(label: 'guide_nut_flow_lbl'.tr, value: "1.500 - 2.100 ppm"),
               ],
             ),
           ),
           _buildInfoCard(
-            title: "Acidity Level (pH)",
+            title: 'guide_ph_title'.tr,
             imagePath: 'assets/images/ph.png',
-            child: const Column(
+            child: Column(
               children: [
-                _MetricRow(label: "Optimal pH", value: "5.8 - 6.5"),
-                _MetricRow(label: "Acidic Limit", value: "< 5.5 (Calcium uptake disrupted)"),
-                _MetricRow(label: "Alkaline Limit", value: "> 6.8 (Iron precipitation)"),
+                _MetricRow(label: 'guide_ph_opt_lbl'.tr, value: "5.8 - 6.5"),
+                _MetricRow(label: 'guide_ph_acid_lbl'.tr, value: 'guide_ph_acid_val'.tr),
+                _MetricRow(label: 'guide_ph_alk_lbl'.tr, value: 'guide_ph_alk_val'.tr),
               ],
             ),
           ),
@@ -176,34 +173,33 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
     );
   }
 
-  // TAB 2: GROWTH PHASES
   Widget _buildTabFaseTumbuh() {
-    return const Padding(
-      padding: EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _StepCard(
-            step: "Phase 1",
-            title: "Seeding (Days 1 - 14)",
-            desc: "Keep rockwool medium moist. Maintain high humidity and provide diluted nutrients (300-500 ppm) once true leaves appear.",
+            step: 'step_1'.tr,
+            title: 'step_1_title'.tr,
+            desc: 'step_1_desc'.tr,
             badgeColor: Colors.blue,
           ),
           _StepCard(
-            step: "Phase 2",
-            title: "Vegetative / Growth (Days 15 - 45)",
-            desc: "Target nutrients at 800 - 1,200 ppm. Prune lateral suckers in leaf axils to strengthen the main stem.",
+            step: 'step_2'.tr,
+            title: 'step_2_title'.tr,
+            desc: 'step_2_desc'.tr,
             badgeColor: Colors.green,
           ),
           _StepCard(
-            step: "Phase 3",
-            title: "Generative & Fruiting (Days 46 - 80+)",
-            desc: "Increase nutrients to 1,500 - 2,100 ppm (High Potassium). Maintain pH at 6.0 - 6.5 to prevent flower drop.",
+            step: 'step_3'.tr,
+            title: 'step_3_title'.tr,
+            desc: 'step_3_desc'.tr,
             badgeColor: Colors.orange,
           ),
           _StepCard(
-            step: "Phase 4",
-            title: "Harvest (Days 80+)",
-            desc: "Chilies are ready to harvest when evenly red. Pick with the stem intact during morning or late afternoon.",
+            step: 'step_4'.tr,
+            title: 'step_4_title'.tr,
+            desc: 'step_4_desc'.tr,
             badgeColor: Colors.red,
           ),
         ],
@@ -211,26 +207,25 @@ class _ChiliGuideViewState extends State<ChiliGuideView> with SingleTickerProvid
     );
   }
 
-  // TAB 3: TROUBLESHOOTING
   Widget _buildTabSolusiMasalah() {
-    return const Padding(
-      padding: EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _ProblemCard(
-            problem: "Frequent Chili Flower Drop",
-            cause: "Excessive heat (>32°C), Potassium/Calcium deficiency, or overly acidic/alkaline pH.",
-            solution: "Maintain pH at 6.0 - 6.5, spray foliar calcium, and use shade nets during intense sunlight.",
+            problem: 'prob_1'.tr,
+            cause: 'prob_1_cause'.tr,
+            solution: 'prob_1_sol'.tr,
           ),
           _ProblemCard(
-            problem: "Curled / Rolled Leaves",
-            cause: "Thrips or aphid pest infestation, or excessively low air humidity.",
-            solution: "Spray organic pesticide (neem oil or diluted dish soap solution) in the late afternoon.",
+            problem: 'prob_2'.tr,
+            cause: 'prob_2_cause'.tr,
+            solution: 'prob_2_sol'.tr,
           ),
           _ProblemCard(
-            problem: "Blossom End Rot",
-            cause: "Calcium (Ca) deficiency or obstructed water pump circulation.",
-            solution: "Adjust water pH to the ideal range (5.8 - 6.5) and ensure smooth water circulation.",
+            problem: 'prob_3'.tr,
+            cause: 'prob_3_cause'.tr,
+            solution: 'prob_3_sol'.tr,
           ),
         ],
       ),
@@ -379,7 +374,7 @@ class _ProblemCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text("Cause: $cause", style: const TextStyle(fontSize: 11, color: Colors.black87)),
+          Text("${'cause_prefix'.tr}: $cause", style: const TextStyle(fontSize: 11, color: Colors.black87)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.all(8),
@@ -388,7 +383,7 @@ class _ProblemCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(1),
             ),
             child: Text(
-              "Solution: $solution",
+              "${'action_prefix'.tr}: $solution",
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF2E4F32)),
             ),
           ),

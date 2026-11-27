@@ -7,9 +7,17 @@ import '../controllers/riwayat_controller.dart';
 class RiwayatView extends GetView<RiwayatController> {
   const RiwayatView({super.key});
 
+  String get _translatedPhase {
+    if (controller.faseAktif.value == 'semai') return 'seedling'.tr;
+    if (controller.faseAktif.value == 'veg_awal') return 'early_veg_full'.tr;
+    if (controller.faseAktif.value == 'veg_lanjutan') return 'late_veg_full'.tr;
+    return controller.namaFaseAktif.value;
+  }
+
   @override
   Widget build(BuildContext context) {
     final String activeParam = Get.arguments ?? 'Suhu';
+    final String localeTag = Get.locale?.toString() ?? 'id_ID';
 
     return MainLayout(
       activeParameter: activeParam,
@@ -31,18 +39,17 @@ class RiwayatView extends GetView<RiwayatController> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
-                      // Select Date
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Filter Date:",
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                          Text(
+                            'filter_date'.tr,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Obx(() => TextButton.icon(
                                 icon: const Icon(Icons.calendar_today, size: 18),
                                 label: Text(
-                                  DateFormat('dd MMM yyyy')
+                                  DateFormat('dd MMM yyyy', localeTag)
                                       .format(controller.tanggalPilihan.value),
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
@@ -63,14 +70,13 @@ class RiwayatView extends GetView<RiwayatController> {
                       ),
                       const Divider(),
 
-                      // Select Start & End Time
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Start:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              Text('start_time'.tr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                               Obx(() => TextButton(
                                     child: Text(
                                       controller.jamMulai.value.format(context),
@@ -92,7 +98,7 @@ class RiwayatView extends GetView<RiwayatController> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("End:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              Text('end_time'.tr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                               Obx(() => TextButton(
                                     child: Text(
                                       controller.jamSelesai.value.format(context),
@@ -120,19 +126,18 @@ class RiwayatView extends GetView<RiwayatController> {
                               ),
                             ),
                             onPressed: () => controller.muatDataRiwayat(),
-                            child: const Text("Search", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text('search_btn'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
 
-                      // Export Buttons
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                              label: const Text("Print PDF"),
+                              label: Text('print_pdf'.tr),
                               onPressed: () => controller.prosesEksporData(isExcel: false),
                             ),
                           ),
@@ -140,7 +145,7 @@ class RiwayatView extends GetView<RiwayatController> {
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.table_chart, color: Colors.green),
-                              label: const Text("Export Excel"),
+                              label: Text('export_excel'.tr),
                               onPressed: () => controller.prosesEksporData(isExcel: true),
                             ),
                           ),
@@ -152,7 +157,7 @@ class RiwayatView extends GetView<RiwayatController> {
               ),
             ),
 
-            // --- PHASE & DYNAMIC THRESHOLD LEGEND ---
+            // --- PHASE & THRESHOLD LEGEND ---
             Padding(
               padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 8.0),
               child: Column(
@@ -172,7 +177,7 @@ class RiwayatView extends GetView<RiwayatController> {
                         Icon(Icons.info_outline, size: 14, color: Colors.green.shade800),
                         const SizedBox(width: 6),
                         Text(
-                          "Phase: ${controller.namaFaseAktif.value} (${controller.nutrisiMinAktif.value.toInt()} - ${controller.nutrisiMaxAktif.value.toInt()} PPM)",
+                          "${'phase_label'.tr}: $_translatedPhase (${controller.nutrisiMinAktif.value.toInt()} - ${controller.nutrisiMaxAktif.value.toInt()} PPM)",
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -193,10 +198,10 @@ class RiwayatView extends GetView<RiwayatController> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          "Note: Red text indicates values outside the ideal threshold.",
-                          style: TextStyle(
+                          'history_legend_note'.tr,
+                          style: const TextStyle(
                             fontSize: 11,
                             fontStyle: FontStyle.italic,
                             color: Colors.black54,
@@ -209,7 +214,7 @@ class RiwayatView extends GetView<RiwayatController> {
               ),
             ),
 
-            // --- HISTORY DATA LIST ---
+            // --- HISTORY LIST ---
             Obx(() {
               if (controller.isLoading.value) {
                 return const Padding(
@@ -219,10 +224,10 @@ class RiwayatView extends GetView<RiwayatController> {
               }
 
               if (controller.riwayatData.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40.0),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
                   child: Center(
-                    child: Text("No history data found for this time range."),
+                    child: Text('no_history_data'.tr),
                   ),
                 );
               }
@@ -244,13 +249,12 @@ class RiwayatView extends GetView<RiwayatController> {
                   bool isSuhuAbnormal = vSuhu < 16.0 || vSuhu > 28.0;
                   bool isLembapAbnormal = vLembap < 60.0 || vLembap > 75.0;
                   bool isPhAbnormal = vPh < 5.8 || vPh > 6.3;
-
                   bool isNutrisiAbnormal = controller.isNutrisiAbnormal(vNutrisi);
 
                   return ListTile(
                     dense: true,
                     title: Text(
-                      "Time: ${item['waktu'] ?? '-'}",
+                      "${'time_label'.tr}: ${item['waktu'] ?? '-'}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Padding(
@@ -258,7 +262,7 @@ class RiwayatView extends GetView<RiwayatController> {
                       child: Text.rich(
                         TextSpan(
                           children: [
-                            const TextSpan(text: "Temp: "),
+                            TextSpan(text: "${'temp_title'.tr}: "),
                             TextSpan(
                               text: "${item['suhu']}°C",
                               style: TextStyle(
@@ -266,7 +270,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                 fontWeight: isSuhuAbnormal ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                            const TextSpan(text: " | Humidity: "),
+                            TextSpan(text: " | ${'humidity_title'.tr}: "),
                             TextSpan(
                               text: "${item['kelembapan']}%",
                               style: TextStyle(
@@ -282,7 +286,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                 fontWeight: isPhAbnormal ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                            const TextSpan(text: " | Nutrient: "),
+                            TextSpan(text: " | ${'nutrient_title'.tr}: "),
                             TextSpan(
                               text: "${item['nutrisi']} PPM",
                               style: TextStyle(

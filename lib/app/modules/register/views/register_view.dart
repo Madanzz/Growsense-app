@@ -10,7 +10,7 @@ class RegisterView extends GetView<RegisterController> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Create New Account'),
+        title: Text('register_appbar'.tr),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -29,19 +29,19 @@ class RegisterView extends GetView<RegisterController> {
                   color: Colors.green,
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Create GrowSense Account',
+                Text(
+                  'create_account_title'.tr,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
                   ),
                 ),
-                const Text(
-                  'Fill in the details below to register',
+                Text(
+                  'create_account_sub'.tr,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                   ),
@@ -52,8 +52,8 @@ class RegisterView extends GetView<RegisterController> {
                   controller: controller.nameController,
                   keyboardType: TextInputType.name,
                   decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'Enter your full name',
+                    labelText: 'full_name'.tr,
+                    hintText: 'full_name_hint'.tr,
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -67,7 +67,7 @@ class RegisterView extends GetView<RegisterController> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'Enter an active email',
+                    hintText: 'active_email_hint'.tr,
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -81,7 +81,7 @@ class RegisterView extends GetView<RegisterController> {
                       obscureText: controller.isObscurePassword.value,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'Minimum 6 characters',
+                        hintText: 'min_6_char'.tr,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -102,8 +102,8 @@ class RegisterView extends GetView<RegisterController> {
                       controller: controller.confirmPasswordController,
                       obscureText: controller.isObscureConfirmPassword.value,
                       decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        hintText: 'Re-enter password',
+                        labelText: 'confirm_password'.tr,
+                        hintText: 'repeat_password'.tr,
                         prefixIcon: const Icon(Icons.lock_reset_outlined),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -142,9 +142,9 @@ class RegisterView extends GetView<RegisterController> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                'REGISTER',
-                                style: TextStyle(
+                            : Text(
+                                'register_btn'.tr,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -156,14 +156,14 @@ class RegisterView extends GetView<RegisterController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Already have an account? "),
+                    Text('have_account'.tr),
                     GestureDetector(
                       onTap: () {
                         Get.back();
                       },
-                      child: const Text(
-                        'Log in here',
-                        style: TextStyle(
+                      child: Text(
+                        'login_here'.tr,
+                        style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
                         ),

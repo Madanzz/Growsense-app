@@ -41,10 +41,18 @@ class MainLayout extends StatelessWidget {
         return nameFromEmail[0].toUpperCase() + nameFromEmail.substring(1);
       }
     }
-    return "User";
+    return 'default_user'.tr;
   }
 
-  // EDIT PARAMETER & PHASE THRESHOLDS DIALOG
+  String _getUserEmail() {
+    return FirebaseAuth.instance.currentUser?.email ?? '-';
+  }
+
+  void _toggleLanguage() {
+    bool isIndo = Get.locale?.languageCode == 'id';
+    Get.updateLocale(isIndo ? const Locale('en', 'US') : const Locale('id', 'ID'));
+  }
+
   void _showDialogEditAmbangBatas(BuildContext context, HomeController homeController) {
     final suhuMinC = TextEditingController(text: homeController.suhuMin.value.toString());
     final suhuMaxC = TextEditingController(text: homeController.suhuMax.value.toString());
@@ -53,12 +61,12 @@ class MainLayout extends StatelessWidget {
     final phMinC = TextEditingController(text: homeController.phMin.value.toString());
     final phMaxC = TextEditingController(text: homeController.phMax.value.toString());
 
-    final semaiMinC = TextEditingController(text: homeController.semaiMin.value > 0 ? homeController.semaiMin.value.toString() : "400");
+    final semaiMinC = TextEditingController(text: homeController.semaiMin.value > 0 ? homeController.semaiMin.value.toString() : "350");
     final semaiMaxC = TextEditingController(text: homeController.semaiMax.value > 0 ? homeController.semaiMax.value.toString() : "600");
-    final vegAwalMinC = TextEditingController(text: homeController.vegAwalMin.value > 0 ? homeController.vegAwalMin.value.toString() : "600");
+    final vegAwalMinC = TextEditingController(text: homeController.vegAwalMin.value > 0 ? homeController.vegAwalMin.value.toString() : "500");
     final vegAwalMaxC = TextEditingController(text: homeController.vegAwalMax.value > 0 ? homeController.vegAwalMax.value.toString() : "750");
     final vegLanjutanMinC = TextEditingController(text: homeController.vegLanjutanMin.value > 0 ? homeController.vegLanjutanMin.value.toString() : "750");
-    final vegLanjutanMaxC = TextEditingController(text: homeController.vegLanjutanMax.value > 0 ? homeController.vegLanjutanMax.value.toString() : "1000");
+    final vegLanjutanMaxC = TextEditingController(text: homeController.vegLanjutanMax.value > 0 ? homeController.vegLanjutanMax.value.toString() : "1250");
 
     final DatabaseReference dbRef = FirebaseDatabase.instance.ref('pengaturan/fase');
     dbRef.get().then((snapshot) {
@@ -66,16 +74,16 @@ class MainLayout extends StatelessWidget {
         Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
 
         if (data['semai'] != null) {
-          semaiMinC.text = (data['semai']['nutrisiMin'] ?? 400).toString();
+          semaiMinC.text = (data['semai']['nutrisiMin'] ?? 350).toString();
           semaiMaxC.text = (data['semai']['nutrisiMax'] ?? 600).toString();
         }
         if (data['veg_awal'] != null) {
-          vegAwalMinC.text = (data['veg_awal']['nutrisiMin'] ?? 600).toString();
+          vegAwalMinC.text = (data['veg_awal']['nutrisiMin'] ?? 500).toString();
           vegAwalMaxC.text = (data['veg_awal']['nutrisiMax'] ?? 750).toString();
         }
         if (data['veg_lanjutan'] != null) {
           vegLanjutanMinC.text = (data['veg_lanjutan']['nutrisiMin'] ?? 750).toString();
-          vegLanjutanMaxC.text = (data['veg_lanjutan']['nutrisiMax'] ?? 1000).toString();
+          vegLanjutanMaxC.text = (data['veg_lanjutan']['nutrisiMax'] ?? 1250).toString();
         }
       }
     });
@@ -85,7 +93,7 @@ class MainLayout extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Container(
           padding: const EdgeInsets.all(16),
-          constraints: const BoxConstraints(maxHeight: 520),
+          constraints: const BoxConstraints(maxHeight: 560),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -94,15 +102,19 @@ class MainLayout extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.tune_rounded, color: Color(0xFF2E7D32)),
-                        SizedBox(width: 8),
-                        Text(
-                          "Edit Thresholds",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.tune_rounded, color: Color(0xFF2E7D32)),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'edit_thresholds'.tr,
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 20),
@@ -113,9 +125,9 @@ class MainLayout extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 6),
 
-                // 1. TEMPERATURE
-                const Text("Temperature (°C):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
-                const SizedBox(height: 4),
+                // SUHU
+                _buildParamHeader('temp_c'.tr, 'ref_temp'.tr),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(suhuMinC, "Min (°C)")),
@@ -125,9 +137,9 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 2. HUMIDITY
-                const Text("Humidity (%):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
-                const SizedBox(height: 4),
+                // KELEMBAPAN
+                _buildParamHeader('humidity_pct'.tr, 'ref_hum'.tr),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(lembapMinC, "Min (%)")),
@@ -137,9 +149,9 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 3. WATER PH
-                const Text("Water pH:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
-                const SizedBox(height: 4),
+                // PH AIR
+                _buildParamHeader('water_ph'.tr, 'ref_ph'.tr),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(phMinC, "Min pH")),
@@ -151,13 +163,12 @@ class MainLayout extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: 6),
 
-                // 4. NUTRIENT PER PHASE
-                const Text("Phase Nutrient Targets (PPM):", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
+                Text('phase_nutrient_target'.tr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20))),
                 const SizedBox(height: 8),
 
-                // Seedling Phase
-                const Text("Seedling Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
+                // FASE SEMAI
+                _buildParamHeader('phase_seedling'.tr, 'ref_semai'.tr, isSub: true),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(semaiMinC, "Min (PPM)")),
@@ -165,11 +176,11 @@ class MainLayout extends StatelessWidget {
                     Expanded(child: _buildInputField(semaiMaxC, "Max (PPM)")),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
-                // Early Vegetative Phase
-                const Text("Early Vegetative Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
+                // FASE VEGETATIF AWAL
+                _buildParamHeader('phase_early_veg'.tr, 'ref_veg_awal'.tr, isSub: true),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(vegAwalMinC, "Min (PPM)")),
@@ -177,11 +188,11 @@ class MainLayout extends StatelessWidget {
                     Expanded(child: _buildInputField(vegAwalMaxC, "Max (PPM)")),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
-                // Late Vegetative Phase
-                const Text("Late Vegetative Phase:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
+                // FASE VEGETATIF LANJUTAN
+                _buildParamHeader('phase_late_veg'.tr, 'ref_veg_lanjutan'.tr, isSub: true),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     Expanded(child: _buildInputField(vegLanjutanMinC, "Min (PPM)")),
@@ -191,7 +202,7 @@ class MainLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // SAVE BUTTON
+                // TOMBOL SIMPAN
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -202,7 +213,7 @@ class MainLayout extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     icon: const Icon(Icons.save_rounded, size: 18),
-                    label: const Text("Save Changes", style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: Text('save_changes'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                     onPressed: () async {
                       if (suhuMinC.text.trim().isEmpty || suhuMaxC.text.trim().isEmpty ||
                           lembapMinC.text.trim().isEmpty || lembapMaxC.text.trim().isEmpty ||
@@ -211,8 +222,8 @@ class MainLayout extends StatelessWidget {
                           vegAwalMinC.text.trim().isEmpty || vegAwalMaxC.text.trim().isEmpty ||
                           vegLanjutanMinC.text.trim().isEmpty || vegLanjutanMaxC.text.trim().isEmpty) {
                         Get.snackbar(
-                          'Validation Warning',
-                          'All threshold fields are required and cannot be empty!',
+                          'val_warning'.tr,
+                          'val_empty'.tr,
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
@@ -237,8 +248,8 @@ class MainLayout extends StatelessWidget {
                       if (sMin <= 0 || sMax <= 0 || lMin <= 0 || lMax <= 0 || pMin <= 0 || pMax <= 0 ||
                           semaiMin <= 0 || semaiMax <= 0 || vegAwalMin <= 0 || vegAwalMax <= 0 || vegLanjutanMin <= 0 || vegLanjutanMax <= 0) {
                         Get.snackbar(
-                          'Validation Warning',
-                          'Parameter threshold values cannot be 0 or negative!',
+                          'val_warning'.tr,
+                          'val_zero_neg'.tr,
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
@@ -249,8 +260,8 @@ class MainLayout extends StatelessWidget {
                       if (sMin >= sMax || lMin >= lMax || pMin >= pMax ||
                           semaiMin >= semaiMax || vegAwalMin >= vegAwalMax || vegLanjutanMin >= vegLanjutanMax) {
                         Get.snackbar(
-                          'Validation Warning',
-                          'Minimum threshold cannot be greater than or equal to maximum threshold!',
+                          'val_warning'.tr,
+                          'val_min_max'.tr,
                           snackPosition: SnackPosition.TOP,
                           backgroundColor: Colors.redAccent,
                           colorText: Colors.white,
@@ -279,13 +290,13 @@ class MainLayout extends StatelessWidget {
                       );
 
                       Get.snackbar(
-                        'Success',
-                        'All parameter thresholds have been updated!',
+                        'success'.tr,
+                        'threshold_updated'.tr,
                         snackPosition: SnackPosition.TOP,
                         backgroundColor: Colors.green,
                         colorText: Colors.white,
                       );
-                    }
+                    },
                   ),
                 ),
               ],
@@ -293,6 +304,40 @@ class MainLayout extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildParamHeader(String title, String referenceText, {bool isSub = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: isSub ? FontWeight.w600 : FontWeight.bold,
+              fontSize: isSub ? 12 : 13,
+              color: isSub ? Colors.black87 : const Color(0xFF1B5E20),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.green.shade200),
+          ),
+          child: Text(
+            referenceText,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.green.shade900,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -311,7 +356,6 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  // SYSTEM SETTINGS BOTTOM SHEET
   void _showSettingsBottomSheet(BuildContext context) {
     final homeController = Get.isRegistered<HomeController>()
         ? Get.find<HomeController>()
@@ -342,13 +386,13 @@ class MainLayout extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.settings_outlined, color: Color(0xFF2E7D32), size: 22),
-                    SizedBox(width: 8),
+                    const Icon(Icons.settings_outlined, color: Color(0xFF2E7D32), size: 22),
+                    const SizedBox(width: 8),
                     Text(
-                      "System Settings",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      'sys_settings'.tr,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -361,7 +405,7 @@ class MainLayout extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 8),
 
-            // ITEM 1: SYNC TO DRIVE
+            // ITEM 1: SINKRONISASI DRIVE
             Obx(() {
               bool isUploading = homeController.isUploadingToDrive.value;
               return ListTile(
@@ -382,12 +426,12 @@ class MainLayout extends StatelessWidget {
                       )
                     : const Icon(Icons.cloud_sync_outlined, color: Color(0xFF2E7D32), size: 24),
                 title: Text(
-                  isUploading ? "Syncing Data..." : "Sync Data to Drive",
+                  isUploading ? 'sync_drive_loading'.tr : 'sync_drive_title'.tr,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                subtitle: const Text(
-                  "Upload local log_growsense_v2.csv file to Google Drive for data delay analysis.",
-                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                subtitle: Text(
+                  'sync_drive_sub'.tr,
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
                 ),
                 onTap: isUploading
                     ? null
@@ -399,7 +443,7 @@ class MainLayout extends StatelessWidget {
             }),
             const SizedBox(height: 8),
 
-            // ITEM 2: EDIT PARAMETER & PHASE THRESHOLDS
+            // ITEM 2: UBAH AMBANG BATAS PARAMETER
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               shape: RoundedRectangleBorder(
@@ -408,13 +452,13 @@ class MainLayout extends StatelessWidget {
               ),
               tileColor: const Color(0xFFF0F4F0),
               leading: const Icon(Icons.tune_rounded, color: Color(0xFF2E7D32), size: 24),
-              title: const Text(
-                "Edit Parameter Thresholds",
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              title: Text(
+                'edit_threshold_title'.tr,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
-              subtitle: const Text(
-                "Configure target Temperature, Humidity, pH, and Nutrient PPM for each plant phase.",
-                style: TextStyle(fontSize: 11, color: Colors.black54),
+              subtitle: Text(
+                'edit_threshold_sub'.tr,
+                style: const TextStyle(fontSize: 11, color: Colors.black54),
               ),
               onTap: () {
                 Get.back();
@@ -428,7 +472,6 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  // NOTIFICATION LOG BOTTOM SHEET
   void _showNotificationLogBottomSheet(BuildContext context) {
     final DatabaseReference dbRef = FirebaseDatabase.instance.ref('log_notifikasi');
 
@@ -458,13 +501,13 @@ class MainLayout extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.notifications_active_rounded, color: Color(0xFF2E7D32), size: 22),
-                    SizedBox(width: 8),
+                    const Icon(Icons.notifications_active_rounded, color: Color(0xFF2E7D32), size: 22),
+                    const SizedBox(width: 8),
                     Text(
-                      "Anomaly Alert Log",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      'anomaly_log_title'.tr,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -485,10 +528,10 @@ class MainLayout extends StatelessWidget {
                   }
 
                   if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        "No anomaly alert history recorded yet.",
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        'no_anomaly_log'.tr,
+                        style: const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     );
                   }
@@ -499,7 +542,7 @@ class MainLayout extends StatelessWidget {
                   map.forEach((key, value) {
                     listLog.add({
                       'id': key,
-                      'judul': value['judul'] ?? 'Alert',
+                      'judul': value['judul'] ?? 'alert_default'.tr,
                       'pesan': value['pesan'] ?? '',
                       'timestamp': value['timestamp'] ?? '-',
                       'waktuMs': value['waktuMs'] ?? 0,
@@ -534,7 +577,7 @@ class MainLayout extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "Time: ${item['timestamp']}",
+                              "${'time_label'.tr}: ${item['timestamp']}",
                               style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -554,6 +597,8 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isIndo = (Get.locale?.languageCode ?? 'id') == 'id';
+
     return Scaffold(
       backgroundColor: const Color(0xFFEFF3EA),
       body: SafeArea(
@@ -624,70 +669,130 @@ class MainLayout extends StatelessWidget {
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                          // PROFIL (LOGO + NAMA USER) -> DROPDOWN MENU PENGATURAN
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: PopupMenuButton<String>(
+                                offset: const Offset(0, 46),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
-                            ),
-                            child: Image.asset(
-                              'assets/images/logo1.png',
-                              height: 24,
-                              width: 24,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _getUserDisplayName(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          const Spacer(),
-
-                          // SETTINGS ICON
-                          IconButton(
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
-                            icon: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.settings_outlined,
                                 color: Colors.white,
-                                size: 22,
+                                elevation: 4,
+                                onSelected: (value) {
+                                  if (value == 'settings') {
+                                    _showSettingsBottomSheet(context);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _getUserDisplayName(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        Text(
+                                          _getUserEmail(),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuDivider(),
+                                  PopupMenuItem<String>(
+                                    value: 'settings',
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.settings_outlined,
+                                          color: Color(0xFF2E7D32),
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'sys_settings'.tr,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    color: Colors.white.withValues(alpha: 0.10),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.15),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Image.asset(
+                                          'assets/images/logo1.png',
+                                          height: 24,
+                                          width: 24,
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          _getUserDisplayName(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            onPressed: () => _showSettingsBottomSheet(context),
                           ),
                           const SizedBox(width: 8),
 
-                          // NOTIFICATION BELL ICON
+                          // IKON LONCENG NOTIFIKASI
                           IconButton(
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
@@ -700,10 +805,43 @@ class MainLayout extends StatelessWidget {
                               child: const Icon(
                                 Icons.notifications_outlined,
                                 color: Colors.white,
-                                size: 22,
+                                size: 20,
                               ),
                             ),
                             onPressed: () => _showNotificationLogBottomSheet(context),
+                          ),
+                          const SizedBox(width: 6),
+
+                          // LANGUAGE SWITCHER (DI SEBELAH KANAN NOTIFIKASI)
+                          InkWell(
+                            onTap: _toggleLanguage,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.language, color: Colors.white, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isIndo ? 'ID' : 'EN',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -723,21 +861,21 @@ class MainLayout extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildShopeeStyleTab(
-                        label: 'Values',
+                        label: 'tab_values'.tr,
                         tabKey: 'Nilai',
                         icon: Icons.dashboard_outlined,
                         activeIcon: Icons.dashboard_rounded,
                         route: '/home',
                       ),
                       _buildShopeeStyleTab(
-                        label: 'History',
+                        label: 'tab_history'.tr,
                         tabKey: 'Riwayat',
                         icon: Icons.history_outlined,
                         activeIcon: Icons.history_rounded,
                         route: '/riwayat',
                       ),
                       _buildShopeeStyleTab(
-                        label: 'Chart',
+                        label: 'tab_chart'.tr,
                         tabKey: 'Grafik',
                         icon: Icons.show_chart_outlined,
                         activeIcon: Icons.show_chart_rounded,
@@ -785,20 +923,20 @@ class MainLayout extends StatelessWidget {
           unselectedFontSize: 11,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, height: 1.4),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, height: 1.4),
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 24),
-              activeIcon: Icon(Icons.home_rounded, size: 24),
-              label: 'Home',
+              icon: const Icon(Icons.home_outlined, size: 24),
+              activeIcon: const Icon(Icons.home_rounded, size: 24),
+              label: 'nav_home'.tr,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_outlined, size: 24),
-              activeIcon: Icon(Icons.menu_book_rounded, size: 24),
-              label: 'Guide',
+              icon: const Icon(Icons.menu_book_outlined, size: 24),
+              activeIcon: const Icon(Icons.menu_book_rounded, size: 24),
+              label: 'nav_guide'.tr,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.logout_rounded, size: 24),
-              label: 'Logout',
+              icon: const Icon(Icons.logout_rounded, size: 24),
+              label: 'nav_logout'.tr,
             ),
           ],
           onTap: (index) {
@@ -815,12 +953,12 @@ class MainLayout extends StatelessWidget {
                 break;
               case 2:
                 Get.defaultDialog(
-                  title: "Logout",
+                  title: 'logout_title'.tr,
                   titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  middleText: "Are you sure you want to log out of the application?",
+                  middleText: 'logout_msg'.tr,
                   middleTextStyle: const TextStyle(fontSize: 13),
-                  textCancel: "Cancel",
-                  textConfirm: "Logout",
+                  textCancel: 'cancel'.tr,
+                  textConfirm: 'logout_title'.tr,
                   confirmTextColor: Colors.white,
                   buttonColor: const Color(0xFFD32F2F),
                   cancelTextColor: Colors.black87,

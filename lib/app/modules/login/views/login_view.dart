@@ -8,8 +8,48 @@ class LoginView extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isIndo = (Get.locale?.languageCode ?? 'id') == 'id';
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: InkWell(
+              onTap: () {
+                Get.updateLocale(isIndo ? const Locale('en', 'US') : const Locale('id', 'ID'));
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.green),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.language, color: Colors.green, size: 15),
+                    const SizedBox(width: 4),
+                    Text(
+                      isIndo ? 'ID' : 'EN',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -27,7 +67,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 const Text(
                   'GrowSense',
                   textAlign: TextAlign.center,
@@ -37,10 +77,10 @@ class LoginView extends GetView<LoginController> {
                     color: Colors.green,
                   ),
                 ),
-                const Text(
-                  'Monitoring System',
+                Text(
+                  'monitoring_system'.tr,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                   ),
@@ -52,7 +92,7 @@ class LoginView extends GetView<LoginController> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    hintText: 'Enter your email',
+                    hintText: 'email_hint'.tr,
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -66,7 +106,7 @@ class LoginView extends GetView<LoginController> {
                       obscureText: controller.isObscure.value,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        hintText: 'Enter your password',
+                        hintText: 'password_hint'.tr,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -105,9 +145,9 @@ class LoginView extends GetView<LoginController> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                'LOGIN',
-                                style: TextStyle(
+                            : Text(
+                                'login_btn'.tr,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -119,14 +159,14 @@ class LoginView extends GetView<LoginController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account? "),
+                    Text('no_account'.tr),
                     GestureDetector(
                       onTap: () {
                         Get.toNamed(Routes.REGISTER);
                       },
-                      child: const Text(
-                        'Register Now',
-                        style: TextStyle(
+                      child: Text(
+                        'register_now'.tr,
+                        style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
                         ),

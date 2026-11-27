@@ -13,6 +13,21 @@ class GrafikView extends GetView<GrafikController> {
   static const Color colorNutrisi = Color(0xFF6D28D9);
   static const Color colorPh = Color(0xFF15803D);
 
+  String _translateRange(String rawRange) {
+    switch (rawRange) {
+      case '1 Hari':
+        return 'range_1d'.tr;
+      case '7 Hari':
+        return 'range_7d'.tr;
+      case '15 Hari':
+        return 'range_15d'.tr;
+      case '1 Bulan':
+        return 'range_1m'.tr;
+      default:
+        return rawRange;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String activeParam = Get.arguments ?? 'Suhu';
@@ -51,7 +66,7 @@ class GrafikView extends GetView<GrafikController> {
   }
 
   Widget _buildRangeSelector() {
-    List<String> ranges = ['1 Day', '7 Days', '15 Days', '1 Month'];
+    List<String> ranges = ['1 Hari', '7 Hari', '15 Hari', '1 Bulan'];
     return Obx(() {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -72,7 +87,7 @@ class GrafikView extends GetView<GrafikController> {
                   ),
                   child: Center(
                     child: Text(
-                      r,
+                      _translateRange(r),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -90,6 +105,7 @@ class GrafikView extends GetView<GrafikController> {
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    String localeTag = Get.locale?.toString() ?? 'id_ID';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -101,10 +117,10 @@ class GrafikView extends GetView<GrafikController> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Obx(() {
-            bool isBulanMode = controller.selectedRange.value == '1 Month';
+            bool isBulanMode = controller.selectedRange.value == '1 Bulan';
             String formattedDate = isBulanMode
-                ? DateFormat('MMMM yyyy').format(controller.selectedDate.value).toUpperCase()
-                : DateFormat('dd MMMM yyyy').format(controller.selectedDate.value).toUpperCase();
+                ? DateFormat('MMMM yyyy', localeTag).format(controller.selectedDate.value).toUpperCase()
+                : DateFormat('dd MMMM yyyy', localeTag).format(controller.selectedDate.value).toUpperCase();
 
             return Text(
               formattedDate,
@@ -113,7 +129,7 @@ class GrafikView extends GetView<GrafikController> {
           }),
           InkWell(
             onTap: () async {
-              bool isBulanMode = controller.selectedRange.value == '1 Month';
+              bool isBulanMode = controller.selectedRange.value == '1 Bulan';
 
               if (isBulanMode) {
                 showDialog(
@@ -121,7 +137,7 @@ class GrafikView extends GetView<GrafikController> {
                   builder: (BuildContext context) {
                     DateTime tempDate = controller.selectedDate.value;
                     return AlertDialog(
-                      title: const Text("Select Month & Year", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      title: Text('select_month_year'.tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       content: SizedBox(
                         height: 250,
                         width: 300,
@@ -135,9 +151,9 @@ class GrafikView extends GetView<GrafikController> {
                               context: context,
                               builder: (context) {
                                 return SimpleDialog(
-                                  title: Text("Select Month - ${dateTime.year}"),
+                                  title: Text('select_month'.trParams({'year': '${dateTime.year}'})),
                                   children: List.generate(12, (index) {
-                                    String monthName = DateFormat('MMMM').format(DateTime(2024, index + 1));
+                                    String monthName = DateFormat('MMMM', localeTag).format(DateTime(2024, index + 1));
                                     return SimpleDialogOption(
                                       onPressed: () {
                                         Navigator.pop(context);
@@ -222,9 +238,25 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
     });
   }
 
+  String _translateRange(String rawRange) {
+    switch (rawRange) {
+      case '1 Hari':
+        return 'range_1d'.tr;
+      case '7 Hari':
+        return 'range_7d'.tr;
+      case '15 Hari':
+        return 'range_15d'.tr;
+      case '1 Bulan':
+        return 'range_1m'.tr;
+      default:
+        return rawRange;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    String localeTag = Get.locale?.toString() ?? 'id_ID';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -241,7 +273,7 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
             children: [
               Expanded(
                 child: Obx(() => Text(
-                  "Parameter Trend (${controller.selectedRange.value})",
+                  'param_trend'.trParams({'range': _translateRange(controller.selectedRange.value)}),
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
                 )),
               ),
@@ -282,11 +314,11 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
             ],
           ),
           if (_currentScale > 1.0)
-            const Padding(
-              padding: EdgeInsets.only(top: 4.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
               child: Text(
-                "Drag chart with 1 finger • Tap scale value to reset",
-                style: TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontStyle: FontStyle.italic),
+                'zoom_hint'.tr,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontStyle: FontStyle.italic),
               ),
             ),
           const SizedBox(height: 12),
@@ -302,10 +334,10 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
 
             String range = controller.selectedRange.value;
             int maxPoints = 30;
-            if (range == '1 Day') maxPoints = 24;
-            if (range == '7 Days') maxPoints = 7;
-            if (range == '15 Days') maxPoints = 15;
-            if (range == '1 Month') {
+            if (range == '1 Hari') maxPoints = 24;
+            if (range == '7 Hari') maxPoints = 7;
+            if (range == '15 Hari') maxPoints = 15;
+            if (range == '1 Bulan') {
               maxPoints = DateTime(controller.selectedDate.value.year, controller.selectedDate.value.month + 1, 0).day;
             }
 
@@ -342,7 +374,7 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
                 SizedBox(
                   height: 260,
                   child: activeLineBars.isEmpty
-                      ? const Center(child: Text("All lines are hidden.", style: TextStyle(color: Colors.grey)))
+                      ? Center(child: Text('all_lines_hidden'.tr, style: const TextStyle(color: Colors.grey)))
                       : ClipRect(
                           child: InteractiveViewer(
                             transformationController: _transformController,
@@ -403,18 +435,18 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
                                           int spotIdx = val.toInt();
                                           bool shouldShowLabel = false;
 
-                                          if (range == '1 Day') {
+                                          if (range == '1 Hari') {
                                             shouldShowLabel = (spotIdx == 1 || spotIdx == 6 || spotIdx == 12 || spotIdx == 18 || spotIdx == 24);
-                                          } else if (range == '7 Days') {
+                                          } else if (range == '7 Hari') {
                                             shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 5 || spotIdx == 7);
-                                          } else if (range == '15 Days') {
+                                          } else if (range == '15 Hari') {
                                             shouldShowLabel = (spotIdx == 1 || spotIdx == 3 || spotIdx == 6 || spotIdx == 9 || spotIdx == 12 || spotIdx == 15);
                                           } else {
                                             shouldShowLabel = (spotIdx == 1 || spotIdx == 5 || spotIdx == 10 || spotIdx == 15 || spotIdx == 20 || spotIdx == 25 || spotIdx == 30);
                                           }
 
                                           if (shouldShowLabel) {
-                                            String txt = range == '1 Month' ? "$spotIdx" : (controller.dateLabelsX[spotIdx] ?? "$spotIdx");
+                                            String txt = range == '1 Bulan' ? "$spotIdx" : (controller.dateLabelsX[spotIdx] ?? "$spotIdx");
                                             return Padding(
                                               padding: const EdgeInsets.only(top: 6.0),
                                               child: Text(
@@ -462,9 +494,9 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
                   if (selectedPoint == null) return const SizedBox.shrink();
 
                   int pIdx = selectedPoint.toInt();
-                  String titleLabel = range == '1 Month'
-                      ? "Day $pIdx ${DateFormat('MMMM yyyy').format(controller.selectedDate.value)}"
-                      : (controller.dateLabelsX[pIdx] ?? "Point $pIdx");
+                  String titleLabel = range == '1 Bulan'
+                      ? "${'day_prefix'.trParams({'day': '$pIdx'})} ${DateFormat('MMMM yyyy', localeTag).format(controller.selectedDate.value)}"
+                      : (controller.dateLabelsX[pIdx] ?? 'point_prefix'.trParams({'point': '$pIdx'}));
 
                   double vSuhu = (pIdx <= controller.suhuSpots.length) ? controller.suhuSpots[pIdx - 1] : 0.0;
                   double vLembap = (pIdx <= controller.lembapSpots.length) ? controller.lembapSpots[pIdx - 1] : 0.0;
@@ -497,15 +529,15 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
                         ),
                         const Divider(color: Colors.white24, height: 12),
 
-                        if (showSuhu) _buildDetailRow("Temperature", "${vSuhu.toStringAsFixed(1)} °C", GrafikView.colorSuhu),
-                        if (showLembap) _buildDetailRow("Humidity", "${vLembap.toStringAsFixed(1)} %", GrafikView.colorLembap),
+                        if (showSuhu) _buildDetailRow('temp_title'.tr, "${vSuhu.toStringAsFixed(1)} °C", GrafikView.colorSuhu),
+                        if (showLembap) _buildDetailRow('humidity_title'.tr, "${vLembap.toStringAsFixed(1)} %", GrafikView.colorLembap),
                         if (showNutrisi)
                           _buildDetailRow(
-                            "Nutrient",
+                            'nutrient_title'.tr,
                             "${vNutrisi.toStringAsFixed(1)} PPM (${(vNutrisi / 100).toStringAsFixed(2)} ×10²)",
                             GrafikView.colorNutrisi,
                           ),
-                        if (showPh) _buildDetailRow("Water pH", vPh.toStringAsFixed(1), GrafikView.colorPh),
+                        if (showPh) _buildDetailRow('ph_title'.tr, vPh.toStringAsFixed(1), GrafikView.colorPh),
                       ],
                     ),
                   );
@@ -583,10 +615,10 @@ class _ZoomableCombinedChartState extends State<_ZoomableCombinedChart> {
         spacing: 8,
         runSpacing: 6,
         children: [
-          _buildInteractiveChipItem("Temperature (°C)", 'Suhu', GrafikView.colorSuhu),
-          _buildInteractiveChipItem("Humidity (%)", 'Kelembapan', GrafikView.colorLembap),
-          _buildInteractiveChipItem("Nutrient (×10² PPM)", 'Nutrisi', GrafikView.colorNutrisi),
-          _buildInteractiveChipItem("Water pH", 'pH Air', GrafikView.colorPh),
+          _buildInteractiveChipItem('chip_temp'.tr, 'Suhu', GrafikView.colorSuhu),
+          _buildInteractiveChipItem('chip_humidity'.tr, 'Kelembapan', GrafikView.colorLembap),
+          _buildInteractiveChipItem('chip_nutrient'.tr, 'Nutrisi', GrafikView.colorNutrisi),
+          _buildInteractiveChipItem('chip_ph'.tr, 'pH Air', GrafikView.colorPh),
         ],
       );
     });

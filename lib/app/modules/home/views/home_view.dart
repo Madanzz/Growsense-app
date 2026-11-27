@@ -27,7 +27,7 @@ class HomeView extends GetView<HomeController> {
               ),
               child: Obx(
                 () => Text(
-                  "Last Update : ${controller.lastUpdateTime.value}",
+                  "${'last_update'.tr} : ${controller.lastUpdateTime.value}",
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 11,
@@ -39,7 +39,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 6),
 
-            // 1.5 COMPACT PHASE SELECTOR WIDGET
+            // 1.5 COMPACT PHASE SELECTOR
             Obx(
               () => Container(
                 width: double.infinity,
@@ -53,7 +53,7 @@ class HomeView extends GetView<HomeController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Phase: ",
+                      "${'phase_label'.tr}: ",
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -77,15 +77,15 @@ class HomeView extends GetView<HomeController> {
                         items: [
                           DropdownMenuItem(
                             value: 'semai',
-                            child: Text('Seedling (${controller.semaiMin.value}-${controller.semaiMax.value} ppm)'),
+                            child: Text("${'seedling'.tr} (${controller.semaiMin.value}-${controller.semaiMax.value} ppm)"),
                           ),
                           DropdownMenuItem(
                             value: 'veg_awal',
-                            child: Text('Early Veg (${controller.vegAwalMin.value}-${controller.vegAwalMax.value} ppm)'),
+                            child: Text("${'early_veg'.tr} (${controller.vegAwalMin.value}-${controller.vegAwalMax.value} ppm)"),
                           ),
                           DropdownMenuItem(
                             value: 'veg_lanjutan',
-                            child: Text('Late Veg (${controller.vegLanjutanMin.value}-${controller.vegLanjutanMax.value} ppm)'),
+                            child: Text("${'late_veg'.tr} (${controller.vegLanjutanMin.value}-${controller.vegLanjutanMax.value} ppm)"),
                           ),
                         ],
                         onChanged: (String? faseBaru) {
@@ -101,7 +101,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 6),
 
-            // 2. 2x2 SENSOR GRID
+            // 2. GRID SENSOR 2x2
             Obx(() {
               final suhu = controller.getSuhuInfo();
               final lembap = controller.getLembapInfo();
@@ -118,8 +118,9 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   _buildSensorCard(
                     imagePath: 'assets/images/thermometer.png',
-                    title: "Temperature",
+                    title: 'temp_title'.tr,
                     valObs: controller.suhuValue,
+                    rawStatus: controller.suhuStatus.value,
                     status: suhu["status"] ?? controller.suhuStatus.value,
                     statusColor: suhu["color"] ?? controller.suhuStatusColor.value,
                     dampak: suhu["dampak"],
@@ -129,8 +130,9 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/humidity.png',
-                    title: "Humidity",
+                    title: 'humidity_title'.tr,
                     valObs: controller.lembapValue,
+                    rawStatus: controller.lembapStatus.value,
                     status: lembap["status"] ?? controller.lembapStatus.value,
                     statusColor: lembap["color"] ?? controller.lembapStatusColor.value,
                     dampak: lembap["dampak"],
@@ -140,8 +142,9 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/nutrition.png',
-                    title: "Nutrient",
+                    title: 'nutrient_title'.tr,
                     valObs: controller.nutrisiValue,
+                    rawStatus: controller.nutrisiStatus.value,
                     status: nutrisi["status"] ?? controller.nutrisiStatus.value,
                     statusColor: nutrisi["color"] ?? controller.nutrisiStatusColor.value,
                     dampak: nutrisi["dampak"],
@@ -151,8 +154,9 @@ class HomeView extends GetView<HomeController> {
                   ),
                   _buildSensorCard(
                     imagePath: 'assets/images/ph.png',
-                    title: "Water pH",
+                    title: 'ph_title'.tr,
                     valObs: controller.phValue,
+                    rawStatus: controller.phStatus.value,
                     status: ph["status"] ?? controller.phStatus.value,
                     statusColor: ph["color"] ?? controller.phStatusColor.value,
                     dampak: ph["dampak"],
@@ -165,7 +169,7 @@ class HomeView extends GetView<HomeController> {
             }),
             const SizedBox(height: 8),
 
-            // 3. OVERALL STATUS (LIVE STATUS FEED)
+            // 3. LIVE STATUS FEED
             Obx(() {
               if (controller.chatLogs.isEmpty) {
                 return const SizedBox.shrink();
@@ -210,7 +214,7 @@ class HomeView extends GetView<HomeController> {
                         ),
                         const Spacer(),
                         Text(
-                          "${controller.chatLogs.length}/5 logs",
+                          'logs_count'.trParams({'count': '${controller.chatLogs.length}'}),
                           style: const TextStyle(fontSize: 9, color: Colors.black38),
                         ),
                       ],
@@ -323,6 +327,7 @@ class HomeView extends GetView<HomeController> {
     String? imagePath,
     required String title,
     required dynamic valObs,
+    required String rawStatus,
     required String status,
     required Color statusColor,
     String? dampak,
@@ -330,7 +335,7 @@ class HomeView extends GetView<HomeController> {
     required String unit,
     required Color cardThemeColor,
   }) {
-    final bool isNormal = status.toLowerCase() == 'normal';
+    final bool isNormal = rawStatus == 'NORMAL';
 
     return Container(
       decoration: BoxDecoration(
@@ -406,7 +411,7 @@ class HomeView extends GetView<HomeController> {
             const SizedBox(height: 6),
 
             Text(
-              "Impact: ${dampak ?? '-'}",
+              "${'impact_prefix'.tr}: ${dampak ?? '-'}",
               style: const TextStyle(
                 fontSize: 9.5,
                 color: Colors.white,
@@ -415,7 +420,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 2),
             Text(
-              "Action: ${penanganan ?? '-'}",
+              "${'action_prefix'.tr}: ${penanganan ?? '-'}",
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.bold,
